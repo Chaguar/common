@@ -17,10 +17,10 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/orderer/etcdraft"
 	"github.com/hyperledger/fabric-protos-go-apiv2/orderer/smartbft"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/viperutil"
-	cf "github.com/hyperledger/fabric-x-common/core/config"
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/viperutil"
+	cf "github.com/Chaguar/common/core/config"
+	"github.com/Chaguar/common/msp"
 )
 
 const (

@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/sampleconfig"
+	"github.com/Chaguar/common/sampleconfig"
 )
 
 func TestDefaultConfigParsing(t *testing.T) {

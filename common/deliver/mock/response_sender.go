@@ -4,9 +4,9 @@ package mock
 import (
 	"sync"
 
+	"github.com/Chaguar/common/common/deliver"
+	"github.com/Chaguar/common/protoutil"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
-	"github.com/hyperledger/fabric-x-common/common/deliver"
-	"github.com/hyperledger/fabric-x-common/protoutil"
 )
 
 type ResponseSender struct {

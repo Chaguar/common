@@ -21,11 +21,11 @@ import (
 	ab "github.com/hyperledger/fabric-protos-go-apiv2/orderer"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/crypto"
-	"github.com/hyperledger/fabric-x-common/common/ledger/blockledger"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/common/crypto"
+	"github.com/Chaguar/common/common/ledger/blockledger"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/protoutil"
 )
 
 var logger = flogging.MustGetLogger("common.deliver")

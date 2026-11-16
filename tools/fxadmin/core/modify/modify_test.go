@@ -11,8 +11,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/modify"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/modify/change"
+	"github.com/Chaguar/common/tools/fxadmin/core/modify"
+	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
 // TestHandlerNotImplemented asserts every modify command currently returns

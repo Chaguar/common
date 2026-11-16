@@ -12,8 +12,8 @@
 package committerpb
 
 import (
+	applicationpb "github.com/Chaguar/common/api/applicationpb"
 	common "github.com/hyperledger/fabric-protos-go-apiv2/common"
-	applicationpb "github.com/hyperledger/fabric-x-common/api/applicationpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
@@ -479,7 +479,7 @@ const file_api_committerpb_notify_proto_rawDesc = "" +
 	"namespaces\x12?\n" +
 	"\fendorsements\x18\x04 \x03(\v2\x1b.applicationpb.EndorsementsR\fendorsements\x12\x1a\n" +
 	"\bmetadata\x18\x05 \x03(\fR\bmetadata\x12]\n" +
-	"\x18committed_write_versions\x18\x06 \x03(\v2#.committerpb.NamespaceWriteVersionsR\x16committedWriteVersionsB8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\x18committed_write_versions\x18\x06 \x03(\v2#.committerpb.NamespaceWriteVersionsR\x16committedWriteVersionsB+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_notify_proto_rawDescOnce sync.Once

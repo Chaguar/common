@@ -88,7 +88,7 @@ skill. Key helpers, all native to this repo: `testcrypto.CreateOrExtendConfigBlo
   (Older ported files carry Fabric's dated header, e.g. `Copyright IBM Corp. 2017 …`; leave those
   as-is — `make lint` only checks changes newer than `main`. New files use the template above.)
 - **Imports** — three blank-line-separated groups: stdlib, third-party, then internal
-  `github.com/hyperledger/fabric-x-common/...`. `goimports` with `local-prefixes` enforces this;
+  `github.com/Chaguar/common/...`. `goimports` with `local-prefixes` enforces this;
   `make lint` fixes most.
 - **Hand-written helpers live beside their generated proto.** In `api/<pkg>/`, generated
   `*.pb.go` / `*_grpc.pb.go` sit next to hand-written `types.go` / `asn1.go` / `identity.go` in
@@ -182,7 +182,7 @@ Before you consider the change done (see `AGENTS.md` and the `Makefile`):
 
 - `goheader` — Apache-2.0 `/* */` header (exact template) on every new file.
 - `gofumpt` + `goimports` — formatting and 3-group import ordering (local-prefix
-  `github.com/hyperledger/fabric-x-common`); `make lint` fixes most.
+  `github.com/Chaguar/common`); `make lint` fixes most.
 - `lll` / `revive line-length-limit` — 120-column lines.
 - `intrange` — use `for range n`. `ireturn` — don't return interfaces. `errname` — `ErrXxx`.
 - `errorlint` — `fmt.Errorf` must use `%w`. `depguard` — no `github.com/pkg/errors`.

@@ -14,9 +14,9 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ordererext"
-	"github.com/hyperledger/fabric-x-common/protolator/testprotos"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/protolator/testprotos"
 )
 
 func extractNestedMsgPlainField(source []byte) string {

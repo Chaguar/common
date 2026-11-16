@@ -11,9 +11,9 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 
-	commontypes "github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/configtx"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	commontypes "github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/configtx"
+	"github.com/Chaguar/common/protoutil"
 )
 
 type (

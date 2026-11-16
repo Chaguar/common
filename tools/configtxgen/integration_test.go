@@ -13,8 +13,8 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/core/config/configtest"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/core/config/configtest"
 )
 
 func hasModPolicySet(groupName string, cg *cb.ConfigGroup) error {

@@ -19,11 +19,11 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/common/ledger/snapshot"
-	"github.com/hyperledger/fabric-x-common/common/ledger/testutil"
-	commonledgerutil "github.com/hyperledger/fabric-x-common/common/ledger/util"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/txflags"
+	"github.com/Chaguar/common/common/ledger/snapshot"
+	"github.com/Chaguar/common/common/ledger/testutil"
+	commonledgerutil "github.com/Chaguar/common/common/ledger/util"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/pkg/txflags"
 )
 
 var testNewHashFunc = func() (hash.Hash, error) {

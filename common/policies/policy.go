@@ -17,8 +17,8 @@ import (
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/protobuf/proto"
 
-	mspi "github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	mspi "github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
 )
 
 const (

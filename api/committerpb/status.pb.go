@@ -247,7 +247,7 @@ const file_api_committerpb_status_proto_rawDesc = "" +
 	"\x1fREJECTED_SNAPSHOT_NO_CHECKPOINT\x10x\x12(\n" +
 	"$REJECTED_DUPLICATE_SNAPSHOT_IN_BLOCK\x10y\x12(\n" +
 	"$REJECTED_CHECKPOINT_NO_SUCH_SNAPSHOT\x10z\x12&\n" +
-	"\"MALFORMED_CHECKPOINT_INVALID_VALUE\x10{B8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\"MALFORMED_CHECKPOINT_INVALID_VALUE\x10{B+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_status_proto_rawDescOnce sync.Once

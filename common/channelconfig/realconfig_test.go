@@ -14,11 +14,11 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/core/config/configtest"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/core/config/configtest"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/configtxgen"
 )
 
 func TestWithRealConfigTX(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/hyperledger/fabric-protos-go-apiv2/msp"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
+	"github.com/Chaguar/common/api/msppb"
 )
 
 // IdentityDeserializer is implemented by both MSPManger and MSP

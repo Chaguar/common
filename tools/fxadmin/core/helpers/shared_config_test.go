@@ -11,11 +11,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
-	"github.com/hyperledger/fabric-x-common/utils/test"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/configtxgen"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/utils/test"
 )
 
 // TestUnmarshalArmaSharedConfig covers the decoding of the ARMA shared config

@@ -4,8 +4,8 @@ package mocks
 import (
 	"sync"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/msp"
 )
 
 type IdentityDeserializer struct {

@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/hyperledger/fabric-x-common/common/grpcmetrics/testpb"
+	"github.com/Chaguar/common/common/grpcmetrics/testpb"
 )
 
 //nolint:revive // line length exceeds 120 charcters.

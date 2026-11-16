@@ -18,10 +18,10 @@ import (
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/ledger/snapshot"
-	"github.com/hyperledger/fabric-x-common/common/ledger/util"
-	"github.com/hyperledger/fabric-x-common/common/ledger/util/leveldbhelper"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/txflags"
+	"github.com/Chaguar/common/common/ledger/snapshot"
+	"github.com/Chaguar/common/common/ledger/util"
+	"github.com/Chaguar/common/common/ledger/util/leveldbhelper"
+	"github.com/Chaguar/common/tools/pkg/txflags"
 )
 
 const (

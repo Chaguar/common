@@ -16,14 +16,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/configtx/test"
-	"github.com/hyperledger/fabric-x-common/common/crypto"
-	"github.com/hyperledger/fabric-x-common/common/ledger/testutil/fakes"
-	"github.com/hyperledger/fabric-x-common/msp"
-	mspmgmt "github.com/hyperledger/fabric-x-common/msp/mgmt"
-	msptesttools "github.com/hyperledger/fabric-x-common/msp/mgmt/testtools"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/txflags"
+	"github.com/Chaguar/common/common/configtx/test"
+	"github.com/Chaguar/common/common/crypto"
+	"github.com/Chaguar/common/common/ledger/testutil/fakes"
+	"github.com/Chaguar/common/msp"
+	mspmgmt "github.com/Chaguar/common/msp/mgmt"
+	msptesttools "github.com/Chaguar/common/msp/mgmt/testtools"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/pkg/txflags"
 )
 
 var signer msp.SigningIdentity

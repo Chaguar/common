@@ -13,8 +13,8 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ordererext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/peerext"
+	"github.com/Chaguar/common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/protolator/protoext/peerext"
 )
 
 type DynamicChannelGroup struct {

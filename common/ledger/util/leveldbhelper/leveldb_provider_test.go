@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb"
 
-	"github.com/hyperledger/fabric-x-common/common/ledger/dataformat"
+	"github.com/Chaguar/common/common/ledger/dataformat"
 )
 
 func TestMain(m *testing.M) {

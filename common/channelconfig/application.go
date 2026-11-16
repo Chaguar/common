@@ -11,7 +11,7 @@ import (
 	pb "github.com/hyperledger/fabric-protos-go-apiv2/peer"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-x-common/common/capabilities"
+	"github.com/Chaguar/common/common/capabilities"
 )
 
 const (

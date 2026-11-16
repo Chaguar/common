@@ -68,7 +68,7 @@ func envDevConfigDir() ([]string, error) {
 
 func goModCacheConfigDir() ([]string, error) {
 	modCache, err := goCMD(
-		"list", "-m", "-f", "{{.Dir}}", "github.com/hyperledger/fabric-x-common",
+		"list", "-m", "-f", "{{.Dir}}", "github.com/Chaguar/common",
 	)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func goPathDevConfigDir() ([]string, error) {
 	for _, p := range filepath.SplitList(gopath) {
 		paths = append(
 			paths,
-			filepath.Join(p, "src/github.com/hyperledger/fabric-x-common/sampleconfig"),
+			filepath.Join(p, "src/github.com/Chaguar/common/sampleconfig"),
 		)
 	}
 	return paths, nil

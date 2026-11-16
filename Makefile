@@ -12,7 +12,7 @@ MAKEFLAGS += --no-builtin-rules
 
 BUILD_DIR ?= bin
 
-PKGNAME = github.com/hyperledger/fabric-x-common
+PKGNAME = github.com/Chaguar/common
 
 GO_TAGS ?=
 

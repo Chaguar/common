@@ -1041,7 +1041,7 @@ const file_api_ordererpb_configuration_proto_rawDesc = "" +
 	"\x14BatchCreationTimeout\x18\x01 \x01(\tR\x14BatchCreationTimeout\x122\n" +
 	"\x14FirstStrikeThreshold\x18\x02 \x01(\tR\x14FirstStrikeThreshold\x124\n" +
 	"\x15SecondStrikeThreshold\x18\x03 \x01(\tR\x15SecondStrikeThreshold\x12,\n" +
-	"\x11AutoRemoveTimeout\x18\x04 \x01(\tR\x11AutoRemoveTimeoutB6Z4github.com/hyperledger/fabric-x-common/api/ordererpbb\x06proto3"
+	"\x11AutoRemoveTimeout\x18\x04 \x01(\tR\x11AutoRemoveTimeoutB)Z'github.com/Chaguar/common/api/ordererpbb\x06proto3"
 
 var (
 	file_api_ordererpb_configuration_proto_rawDescOnce sync.Once

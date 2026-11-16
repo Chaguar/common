@@ -23,8 +23,8 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/client"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/client"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
 // pollInterval is how often each assembler's ledger is queried while following.

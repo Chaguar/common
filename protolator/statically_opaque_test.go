@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protolator/testprotos"
+	"github.com/Chaguar/common/protolator/testprotos"
 )
 
 func extractSimpleMsgPlainField(source []byte) string {

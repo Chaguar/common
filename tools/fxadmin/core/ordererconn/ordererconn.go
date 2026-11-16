@@ -19,10 +19,10 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp"
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
 // Info holds everything needed to dial the orderer, extracted from a config

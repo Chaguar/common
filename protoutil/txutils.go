@@ -17,7 +17,7 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/peer"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protoutil/identity"
+	"github.com/Chaguar/common/protoutil/identity"
 )
 
 // SignedEnvelopeParameters describes the envelope CreateSignedEnvelopeWithSignatureHeader creates.

@@ -14,8 +14,8 @@ import (
 	mspprotos "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/core/config/configtest"
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/core/config/configtest"
+	"github.com/Chaguar/common/msp"
 )
 
 func TestMSPConfigManager(t *testing.T) {

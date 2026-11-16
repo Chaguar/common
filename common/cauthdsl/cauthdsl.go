@@ -16,7 +16,7 @@ import (
 	mb "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/msp"
 )
 
 var cauthdslLogger = flogging.MustGetLogger("cauthdsl")

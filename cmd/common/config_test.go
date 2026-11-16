@@ -16,8 +16,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/cmd/common/comm"
-	"github.com/hyperledger/fabric-x-common/cmd/common/signer"
+	"github.com/Chaguar/common/cmd/common/comm"
+	"github.com/Chaguar/common/cmd/common/signer"
 )
 
 func TestConfig(t *testing.T) {

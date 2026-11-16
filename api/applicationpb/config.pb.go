@@ -343,7 +343,7 @@ const file_api_applicationpb_config_proto_rawDesc = "" +
 	"\aversion\x18\x03 \x01(\x04R\aversion\"I\n" +
 	"\x11ConfigTransaction\x12\x1a\n" +
 	"\benvelope\x18\x01 \x01(\fR\benvelope\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversionB:Z8github.com/hyperledger/fabric-x-common/api/applicationpbb\x06proto3"
+	"\aversion\x18\x02 \x01(\x04R\aversionB-Z+github.com/Chaguar/common/api/applicationpbb\x06proto3"
 
 var (
 	file_api_applicationpb_config_proto_rawDescOnce sync.Once

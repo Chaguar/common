@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/signer"
+	"github.com/Chaguar/common/tools/fxadmin/core/signer"
 )
 
 func TestNewRejectsMissingArguments(t *testing.T) {

@@ -146,7 +146,7 @@ const file_api_committerpb_write_versions_proto_rawDesc = "" +
 	"\aversion\x18\x02 \x01(\x04R\aversion\"i\n" +
 	"\x16NamespaceWriteVersions\x12\x13\n" +
 	"\x05ns_id\x18\x01 \x01(\tR\x04nsId\x12:\n" +
-	"\x06writes\x18\x02 \x03(\v2\".committerpb.CommittedWriteVersionR\x06writesB8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\x06writes\x18\x02 \x03(\v2\".committerpb.CommittedWriteVersionR\x06writesB+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_write_versions_proto_rawDescOnce sync.Once

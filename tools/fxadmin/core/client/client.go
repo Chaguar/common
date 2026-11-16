@@ -25,15 +25,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/ordererconn"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/seek"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/signer"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/user"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/comm"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/ordererconn"
+	"github.com/Chaguar/common/tools/fxadmin/core/seek"
+	"github.com/Chaguar/common/tools/fxadmin/core/signer"
+	"github.com/Chaguar/common/tools/fxadmin/core/user"
+	"github.com/Chaguar/common/tools/pkg/comm"
 )
 
 const rpcTimeout = 30 * time.Second

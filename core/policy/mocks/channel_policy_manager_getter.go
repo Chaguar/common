@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	"github.com/hyperledger/fabric-x-common/common/policies"
+	"github.com/Chaguar/common/common/policies"
 	mock "github.com/stretchr/testify/mock"
 )
 

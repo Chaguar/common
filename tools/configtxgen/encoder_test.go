@@ -19,11 +19,11 @@ import (
 	"github.com/onsi/gomega"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/protoutil/identity/mocks"
-	"github.com/hyperledger/fabric-x-common/tools/test"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/protoutil/identity/mocks"
+	"github.com/Chaguar/common/tools/test"
 )
 
 const (

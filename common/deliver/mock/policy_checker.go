@@ -4,8 +4,8 @@ package mock
 import (
 	"sync"
 
+	"github.com/Chaguar/common/common/deliver"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
-	"github.com/hyperledger/fabric-x-common/common/deliver"
 )
 
 type PolicyChecker struct {

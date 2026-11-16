@@ -121,7 +121,7 @@ const file_test_proto_rawDesc = "" +
 	"\tEmptyCall\x12\x06.Empty\x1a\x06.Empty\x12!\n" +
 	"\vEmptyStream\x12\x06.Empty\x1a\x06.Empty(\x010\x012'\n" +
 	"\vEchoService\x12\x18\n" +
-	"\bEchoCall\x12\x05.Echo\x1a\x05.EchoB9Z7github.com/hyperledger/fabric-x-common/core/comm/testpbb\x06proto3"
+	"\bEchoCall\x12\x05.Echo\x1a\x05.EchoB,Z*github.com/Chaguar/common/core/comm/testpbb\x06proto3"
 
 var (
 	file_test_proto_rawDescOnce sync.Once

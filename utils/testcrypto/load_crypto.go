@@ -13,8 +13,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/tools/cryptogen"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/tools/cryptogen"
 )
 
 // GetPeersIdentities returns the peers' identities from a crypto path.

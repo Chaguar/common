@@ -12,7 +12,7 @@
 package applicationpb
 
 import (
-	msppb "github.com/hyperledger/fabric-x-common/api/msppb"
+	msppb "github.com/Chaguar/common/api/msppb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -480,7 +480,7 @@ const file_api_applicationpb_block_tx_proto_rawDesc = "" +
 	"\x1aendorsements_with_identity\x18\x01 \x03(\v2&.applicationpb.EndorsementWithIdentityR\x18endorsementsWithIdentity\"h\n" +
 	"\x17EndorsementWithIdentity\x12 \n" +
 	"\vendorsement\x18\x01 \x01(\fR\vendorsement\x12+\n" +
-	"\bidentity\x18\x02 \x01(\v2\x0f.msppb.IdentityR\bidentityB:Z8github.com/hyperledger/fabric-x-common/api/applicationpbb\x06proto3"
+	"\bidentity\x18\x02 \x01(\v2\x0f.msppb.IdentityR\bidentityB-Z+github.com/Chaguar/common/api/applicationpbb\x06proto3"
 
 var (
 	file_api_applicationpb_block_tx_proto_rawDescOnce sync.Once

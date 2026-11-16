@@ -12,7 +12,7 @@ filename: "{{.InterfaceName | snakecase}}.go"
 structname: "{{.InterfaceName}}"
 pkgname: mocks
 packages:
-  github.com/hyperledger/fabric-x-common/core/policy:
+  github.com/Chaguar/common/core/policy:
     interfaces:
       ChannelPolicyManagerGetter:
       ChannelPolicyReferenceProvider:

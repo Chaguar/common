@@ -14,10 +14,10 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-x-common/common/deliver"
-	"github.com/hyperledger/fabric-x-common/common/deliver/mock"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/test"
+	"github.com/Chaguar/common/common/deliver"
+	"github.com/Chaguar/common/common/deliver/mock"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/test"
 )
 
 var _ = ginkgo.Describe("SessionAccessControl", func() {

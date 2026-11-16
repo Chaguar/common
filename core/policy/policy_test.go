@@ -12,10 +12,10 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/peer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/core/policy/mocks"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/core/policy/mocks"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func TestCheckPolicyInvalidArgs(t *testing.T) {

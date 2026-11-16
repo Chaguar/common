@@ -76,8 +76,8 @@ Ground every finding in evidence. Before posting any comment:
 ### 1. Fetch PR Information
 
 ```bash
-gh pr view <PR_NUMBER> --repo hyperledger/fabric-x-common --json title,body,files,commits
-gh pr diff <PR_NUMBER> --repo hyperledger/fabric-x-common
+gh pr view <PR_NUMBER> --repo Chaguar/common --json title,body,files,commits
+gh pr diff <PR_NUMBER> --repo Chaguar/common
 ```
 
 ### 2. Create Local Review Document
@@ -94,7 +94,7 @@ Present the review document and ask: **"Ready to post this review to GitHub? (ye
 ### 4. Post Summary Comment
 
 ```bash
-gh pr review <PR_NUMBER> --repo hyperledger/fabric-x-common --comment --body "<REVIEW_SUMMARY>"
+gh pr review <PR_NUMBER> --repo Chaguar/common --comment --body "<REVIEW_SUMMARY>"
 ```
 
 ### 5. Post Inline Comments
@@ -104,7 +104,7 @@ gh pr review <PR_NUMBER> --repo hyperledger/fabric-x-common --comment --body "<R
 For 1-2 short comments without special characters, use `--field`:
 
 ```bash
-gh api --method POST /repos/hyperledger/fabric-x-common/pulls/<PR_NUMBER>/reviews \
+gh api --method POST /repos/Chaguar/common/pulls/<PR_NUMBER>/reviews \
   --field event=COMMENT \
   --field body='<REVIEW_DESCRIPTION>' \
   --field 'comments[][path]=<FILE_PATH>' \
@@ -137,7 +137,7 @@ For 3+ comments, suggestion blocks, `<details>` tags, or special characters, wri
 ```
 
 ```bash
-gh api -X POST /repos/hyperledger/fabric-x-common/pulls/<PR_NUMBER>/reviews --input /tmp/review_payload.json
+gh api -X POST /repos/Chaguar/common/pulls/<PR_NUMBER>/reviews --input /tmp/review_payload.json
 ```
 
 ## Review Scope and Prioritization

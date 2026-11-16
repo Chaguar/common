@@ -98,7 +98,7 @@ const file_api_committerpb_sidecar_proto_rawDesc = "" +
 	"\tGetTxByID\x12\x11.committerpb.TxID\x1a\x10.common.Envelope\x12a\n" +
 	"\x16OpenNotificationStream\x12 .committerpb.NotificationRequest\x1a!.committerpb.NotificationResponse(\x010\x01\x12K\n" +
 	"\fStreamBlocks\x12 .committerpb.StreamBlocksRequest\x1a\x17.committerpb.BlockEvent0\x01\x12`\n" +
-	"\x18DeleteDBCloneForSnapshot\x12,.committerpb.DeleteDBCloneForSnapshotRequest\x1a\x16.google.protobuf.EmptyB8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\x18DeleteDBCloneForSnapshot\x12,.committerpb.DeleteDBCloneForSnapshotRequest\x1a\x16.google.protobuf.EmptyB+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_sidecar_proto_rawDescOnce sync.Once

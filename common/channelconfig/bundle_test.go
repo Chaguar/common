@@ -13,7 +13,7 @@ import (
 	ab "github.com/hyperledger/fabric-protos-go-apiv2/orderer"
 	"github.com/stretchr/testify/require"
 
-	cc "github.com/hyperledger/fabric-x-common/common/capabilities"
+	cc "github.com/Chaguar/common/common/capabilities"
 )
 
 const (

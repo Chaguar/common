@@ -14,11 +14,11 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/peer"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/commonext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ledger/rwsetext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/mspext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ordererext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/peerext"
+	"github.com/Chaguar/common/protolator/protoext/commonext"
+	"github.com/Chaguar/common/protolator/protoext/ledger/rwsetext"
+	"github.com/Chaguar/common/protolator/protoext/mspext"
+	"github.com/Chaguar/common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/protolator/protoext/peerext"
 )
 
 // Docorate will add additional capabilities to some protobuf messages that
