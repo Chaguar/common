@@ -12,7 +12,7 @@ import (
 
 	. "github.com/onsi/gomega"
 
-	"github.com/hyperledger/fabric-x-common/protolator/testprotos"
+	"github.com/Chaguar/common/protolator/testprotos"
 )
 
 func TestPlainDynamicMsg(t *testing.T) {

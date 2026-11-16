@@ -17,7 +17,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/cockroachdb/errors"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/modify/change"
+	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
 // Flag names shared across commands.

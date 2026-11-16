@@ -19,11 +19,11 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/viperutil"
-	"github.com/hyperledger/fabric-x-common/core/config"
-	"github.com/hyperledger/fabric-x-common/sampleconfig"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/viperutil"
+	"github.com/Chaguar/common/core/config"
+	"github.com/Chaguar/common/sampleconfig"
+	"github.com/Chaguar/common/tools/configtxgen"
 )
 
 // ConfigBlockParameters represents the configuration of the config block.

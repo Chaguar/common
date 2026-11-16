@@ -14,8 +14,8 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/stretchr/testify/require"
 
-	mockpolicies "github.com/hyperledger/fabric-x-common/common/configtx/mock"
-	"github.com/hyperledger/fabric-x-common/common/policies"
+	mockpolicies "github.com/Chaguar/common/common/configtx/mock"
+	"github.com/Chaguar/common/common/policies"
 )
 
 func TestReadSetNotPresent(t *testing.T) {

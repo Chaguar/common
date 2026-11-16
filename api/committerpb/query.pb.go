@@ -12,7 +12,7 @@
 package committerpb
 
 import (
-	applicationpb "github.com/hyperledger/fabric-x-common/api/applicationpb"
+	applicationpb "github.com/Chaguar/common/api/applicationpb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -592,7 +592,7 @@ const file_api_committerpb_query_proto_rawDesc = "" +
 	"\aEndView\x12\x11.committerpb.View\x1a\x16.google.protobuf.Empty\"\x00\x12R\n" +
 	"\x14GetNamespacePolicies\x12\x16.google.protobuf.Empty\x1a .applicationpb.NamespacePolicies\"\x00\x12R\n" +
 	"\x14GetConfigTransaction\x12\x16.google.protobuf.Empty\x1a .applicationpb.ConfigTransaction\"\x00\x12S\n" +
-	"\x14GetTransactionStatus\x12\x1a.committerpb.TxStatusQuery\x1a\x1d.committerpb.TxStatusResponse\"\x00B8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\x14GetTransactionStatus\x12\x1a.committerpb.TxStatusQuery\x1a\x1d.committerpb.TxStatusResponse\"\x00B+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_query_proto_rawDescOnce sync.Once

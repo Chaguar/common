@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protowire"
 
-	"github.com/hyperledger/fabric-x-common/common/ledger/testutil"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/common/ledger/testutil"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func TestBlockSerialization(t *testing.T) {

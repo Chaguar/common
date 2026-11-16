@@ -28,10 +28,10 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/hyperledger/fabric-x-common/common/metadata"
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/tools/configtxlator/rest"
-	"github.com/hyperledger/fabric-x-common/tools/configtxlator/update"
+	"github.com/Chaguar/common/common/metadata"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/tools/configtxlator/rest"
+	"github.com/Chaguar/common/tools/configtxlator/update"
 )
 
 const programName = "configtxlator"

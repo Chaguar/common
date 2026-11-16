@@ -11,7 +11,7 @@ description, reviewed as-is. Write it to the PR template and keep the exact word
 user approves.
 
 The upstream repo for all `gh` operations (issues, and PRs via `--repo`) is
-**`hyperledger/fabric-x-common`**. PRs, however, are pushed from and opened off **your fork**
+**`Chaguar/common`**. PRs, however, are pushed from and opened off **your fork**
 (`<your-user>/fabric-x-common`), not upstream — see
 [Push to your fork, then open the PR against upstream](#5-push-to-your-fork-then-open-the-pr-against-upstream).
 
@@ -172,7 +172,7 @@ which re-strips the headers; if you must edit interactively, add `--cleanup=whit
 
 ### 5. Push to your fork, then open the PR against upstream
 
-Contributors don't have push access to `hyperledger/fabric-x-common`, so the branch must live on
+Contributors don't have push access to `Chaguar/common`, so the branch must live on
 **your fork**, and the PR is opened from `your-fork:branch` into `hyperledger:main`. Never push
 feature branches to the upstream remote.
 
@@ -185,7 +185,7 @@ git remote -v
 ```
 
 Identify the two that matter by URL: the **upstream** is the remote whose URL is
-`hyperledger/fabric-x-common`; the **fork** is the remote under your own GitHub owner. Confirm your
+`Chaguar/common`; the **fork** is the remote under your own GitHub owner. Confirm your
 fork's owner rather than hardcoding a name:
 
 ```bash
@@ -197,7 +197,7 @@ Push the branch to the fork and open the PR with an explicit cross-repo `--head`
 
 ```bash
 git push -u "$FORK_REMOTE" <branch>
-gh pr create --repo hyperledger/fabric-x-common \
+gh pr create --repo Chaguar/common \
   --base main --head "$FORK_OWNER:<branch>" \
   --title "[area] Short description" \
   --body-file /tmp/pr-body.md
@@ -212,9 +212,9 @@ upstream-branch PR). If a branch was mistakenly pushed to the upstream remote, d
 
 The PR body is the commit message body verbatim (subject line and the `Signed-off-by:` trailer
 removed). If a PR already exists or you're updating one, reuse the same body with
-`gh pr edit --repo hyperledger/fabric-x-common <num> --body-file /tmp/pr-body.md`. Apply any labels
+`gh pr edit --repo Chaguar/common <num> --body-file /tmp/pr-body.md`. Apply any labels
 to the PR through `gh` when applicable (e.g.
-`gh pr edit --repo hyperledger/fabric-x-common <num> --add-label documentation`) — never in the
+`gh pr edit --repo Chaguar/common <num> --add-label documentation`) — never in the
 message body.
 
 ## Opening a GitHub issue
@@ -254,7 +254,7 @@ type-oriented:
   `breaking`, `question`, `duplicate`, `invalid`, `wontfix`, `good-first-issue`, `help-wanted`.
 - **Component / topic**: `dependencies`, `go`, `logging`, `snapshot`.
 
-Labels evolve — run `gh label list --repo hyperledger/fabric-x-common` to confirm current
+Labels evolve — run `gh label list --repo Chaguar/common` to confirm current
 names before applying, and don't invent labels that don't exist. Labels are applied through
 the `gh` command (`--label` below), never written into the issue body.
 
@@ -262,7 +262,7 @@ Show the proposed `gh issue create` command (title, body, labels) for approval, 
 with `--body-file` so the multi-line body is preserved:
 
 ```bash
-gh issue create --repo hyperledger/fabric-x-common \
+gh issue create --repo Chaguar/common \
   --title "[area] Short description" \
   --body-file /tmp/issue-body.md \
   --label enhancement --label snapshot

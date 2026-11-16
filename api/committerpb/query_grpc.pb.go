@@ -13,7 +13,7 @@ package committerpb
 
 import (
 	context "context"
-	applicationpb "github.com/hyperledger/fabric-x-common/api/applicationpb"
+	applicationpb "github.com/Chaguar/common/api/applicationpb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

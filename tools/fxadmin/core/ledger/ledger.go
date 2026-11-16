@@ -15,10 +15,10 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
 
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/client"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/seek"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/fxadmin/core/client"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/seek"
 )
 
 var logger = flogging.MustGetLogger("fxadmin.ledger")

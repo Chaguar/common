@@ -12,7 +12,7 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/sw"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/msp/mgmt"
+	"github.com/Chaguar/common/msp/mgmt"
 )
 
 func TestFakeSetup(t *testing.T) {

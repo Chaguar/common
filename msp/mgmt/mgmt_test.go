@@ -16,9 +16,9 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/sw"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/core/config/configtest"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/core/config/configtest"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func TestGetManagerForChains(t *testing.T) {

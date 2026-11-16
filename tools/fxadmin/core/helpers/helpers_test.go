@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
 // TestRequireDistinctOutput covers the output-collision guard: distinct inputs

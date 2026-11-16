@@ -13,7 +13,7 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/protoutil"
 )
 
 // ReadConfigBlock reads and unmarshals a protobuf config block from path. It is

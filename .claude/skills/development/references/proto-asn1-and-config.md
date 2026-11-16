@@ -23,7 +23,7 @@ next to the source, and hand-written helpers (`types.go`, `asn1.go`, `identity.g
 
 Workflow:
 
-1. Edit the `.proto`. Keep `option go_package = "github.com/hyperledger/fabric-x-common/api/<pkg>";`
+1. Edit the `.proto`. Keep `option go_package = "github.com/Chaguar/common/api/<pkg>";`
    and `package <pkg>;` consistent with the directory.
 2. Regenerate: **`make proto`**. This clones `fabric-protos` (pinned to the
    `fabric-protos-go-apiv2` version in `go.mod`) into `.build/`, then runs `protoc` with the

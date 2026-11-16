@@ -10,8 +10,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/tools/configtxgen"
 )
 
 // UnmarshalArmaSharedConfig unmarshals the ARMA shared config that an orderer

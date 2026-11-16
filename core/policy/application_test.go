@@ -16,12 +16,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/cauthdsl"
-	"github.com/hyperledger/fabric-x-common/common/policydsl"
-	"github.com/hyperledger/fabric-x-common/core/policy/mocks"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/cauthdsl"
+	"github.com/Chaguar/common/common/policydsl"
+	"github.com/Chaguar/common/core/policy/mocks"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func TestComponentIntegrationSignaturePolicyEnv(t *testing.T) {

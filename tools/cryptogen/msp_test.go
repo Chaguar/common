@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
 
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/tools/test"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/tools/test"
 )
 
 const (

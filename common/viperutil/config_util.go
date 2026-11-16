@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 	"go.yaml.in/yaml/v3"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
+	"github.com/Chaguar/common/api/types"
 )
 
 var logger = flogging.MustGetLogger("viperutil")

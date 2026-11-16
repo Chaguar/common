@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
+	"github.com/Chaguar/common/api/ordererpb"
 )
 
 // ArmaParty returns the ARMA shared config entry of a party whose router and

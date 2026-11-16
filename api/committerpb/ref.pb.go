@@ -143,7 +143,7 @@ const file_api_committerpb_ref_proto_rawDesc = "" +
 	"\x05tx_id\x18\x03 \x01(\tR\x04txId\"#\n" +
 	"\n" +
 	"TxIDsBatch\x12\x15\n" +
-	"\x06tx_ids\x18\x01 \x03(\tR\x05txIdsB8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\x06tx_ids\x18\x01 \x03(\tR\x05txIdsB+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_ref_proto_rawDescOnce sync.Once

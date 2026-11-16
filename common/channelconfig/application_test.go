@@ -13,8 +13,8 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/capabilities"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/common/capabilities"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func TestApplicationInterface(t *testing.T) {

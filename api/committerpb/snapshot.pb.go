@@ -203,7 +203,7 @@ const file_api_committerpb_snapshot_proto_rawDesc = "" +
 	"\n" +
 	"\x06FAILED\x10\x04\x12\x10\n" +
 	"\fCHECKPOINTED\x10\x05\x12\v\n" +
-	"\aABORTED\x10\x06B8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\aABORTED\x10\x06B+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_snapshot_proto_rawDescOnce sync.Once

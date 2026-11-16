@@ -12,8 +12,8 @@ import (
 	pmsp "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/msp"
 )
 
 type MockMSP struct {

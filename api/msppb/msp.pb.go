@@ -318,7 +318,7 @@ const file_api_msppb_msp_proto_rawDesc = "" +
 	"\x06msp_id\x18\x01 \x01(\tR\x05mspId\x12\"\n" +
 	"\vcertificate\x18\x02 \x01(\fH\x00R\vcertificate\x12'\n" +
 	"\x0ecertificate_id\x18\x03 \x01(\tH\x00R\rcertificateIdB\t\n" +
-	"\acreatorB2Z0github.com/hyperledger/fabric-x-common/api/msppbb\x06proto3"
+	"\acreatorB%Z#github.com/Chaguar/common/api/msppbb\x06proto3"
 
 var (
 	file_api_msppb_msp_proto_rawDescOnce sync.Once

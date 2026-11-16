@@ -16,12 +16,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/core/aclmgmt/mocks"
-	"github.com/hyperledger/fabric-x-common/core/policy"
-	msptesttools "github.com/hyperledger/fabric-x-common/msp/mgmt/testtools"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	smocks "github.com/hyperledger/fabric-x-common/protoutil/identity/mocks"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/core/aclmgmt/mocks"
+	"github.com/Chaguar/common/core/policy"
+	msptesttools "github.com/Chaguar/common/msp/mgmt/testtools"
+	"github.com/Chaguar/common/protoutil"
+	smocks "github.com/Chaguar/common/protoutil/identity/mocks"
 )
 
 func newPolicyProvider(pEvaluator policyEvaluator) aclmgmtPolicyProvider {

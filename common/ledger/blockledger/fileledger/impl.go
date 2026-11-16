@@ -13,8 +13,8 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	ab "github.com/hyperledger/fabric-protos-go-apiv2/orderer"
 
-	"github.com/hyperledger/fabric-x-common/common/ledger"
-	"github.com/hyperledger/fabric-x-common/common/ledger/blockledger"
+	"github.com/Chaguar/common/common/ledger"
+	"github.com/Chaguar/common/common/ledger/blockledger"
 )
 
 var logger = flogging.MustGetLogger("common.ledger.blockledger.file")

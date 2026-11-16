@@ -22,9 +22,9 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
 
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/modify/change"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
 var logger = flogging.MustGetLogger("fxadmin.modify")

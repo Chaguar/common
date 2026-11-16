@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
+	"github.com/Chaguar/common/api/ordererpb"
 )
 
 type DynamicOrdererGroup struct {

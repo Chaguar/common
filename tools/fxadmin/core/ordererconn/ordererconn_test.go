@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
-	"github.com/hyperledger/fabric-x-common/tools/cryptogen"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/client/test"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/ordererconn"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/tools/configtxgen"
+	"github.com/Chaguar/common/tools/cryptogen"
+	"github.com/Chaguar/common/tools/fxadmin/core/client/test"
+	"github.com/Chaguar/common/tools/fxadmin/core/ordererconn"
 )
 
 // armaChannel is the channel used by the test config blocks and updates.

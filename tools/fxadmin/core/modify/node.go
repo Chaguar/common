@@ -20,12 +20,12 @@ import (
 	ab "github.com/hyperledger/fabric-protos-go-apiv2/orderer"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/modify/change"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
 // The roles of an ARMA party's nodes, as `modify party node --role` names them.

@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protowire"
 
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/protoutil"
 )
 
 type serializedBlockInfo struct {

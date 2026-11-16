@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
-module github.com/hyperledger/fabric-x-common
+module github.com/Chaguar/common
 
 go 1.27.3
 

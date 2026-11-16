@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protowire"
 
-	"github.com/hyperledger/fabric-x-common/common/ledger/testutil"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/txflags"
+	"github.com/Chaguar/common/common/ledger/testutil"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/pkg/txflags"
 )
 
 func TestBlockfileMgrBlockReadWrite(t *testing.T) {

@@ -7,8 +7,8 @@ package mocks
 import (
 	"time"
 
+	"github.com/Chaguar/common/msp"
 	msp0 "github.com/hyperledger/fabric-protos-go-apiv2/msp"
-	"github.com/hyperledger/fabric-x-common/msp"
 	mock "github.com/stretchr/testify/mock"
 )
 

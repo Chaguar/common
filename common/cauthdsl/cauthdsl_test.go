@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/policydsl"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/policydsl"
+	"github.com/Chaguar/common/protoutil"
 )
 
 var signers = []*msppb.Identity{

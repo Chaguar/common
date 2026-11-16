@@ -122,7 +122,7 @@ const file_api_committerpb_block_query_proto_rawDesc = "" +
 	"\vBlockNumber\x12\x16\n" +
 	"\x06number\x18\x01 \x01(\x04R\x06number\"\x1b\n" +
 	"\x04TxID\x12\x13\n" +
-	"\x05tx_id\x18\x01 \x01(\tR\x04txIdB8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\x05tx_id\x18\x01 \x01(\tR\x04txIdB+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_block_query_proto_rawDescOnce sync.Once

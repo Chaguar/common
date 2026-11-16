@@ -13,8 +13,8 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/utils/test"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/utils/test"
 )
 
 // TestToString_RoundTrips asserts that rendering a policy produced by FromString and feeding

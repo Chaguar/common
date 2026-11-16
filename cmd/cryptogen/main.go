@@ -14,9 +14,9 @@ import (
 
 	"github.com/alecthomas/kingpin/v2"
 
-	"github.com/hyperledger/fabric-x-common/common/metadata"
-	"github.com/hyperledger/fabric-x-common/sampleconfig"
-	"github.com/hyperledger/fabric-x-common/tools/cryptogen"
+	"github.com/Chaguar/common/common/metadata"
+	"github.com/Chaguar/common/sampleconfig"
+	"github.com/Chaguar/common/tools/cryptogen"
 )
 
 const programName = "cryptogen"

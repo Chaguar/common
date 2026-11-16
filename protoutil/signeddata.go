@@ -16,7 +16,7 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
+	"github.com/Chaguar/common/api/msppb"
 )
 
 // SignedData is used to represent the general triplet required to verify a signature

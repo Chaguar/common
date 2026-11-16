@@ -21,10 +21,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/msp"
-	mspmgmt "github.com/hyperledger/fabric-x-common/msp/mgmt"
-	msptesttools "github.com/hyperledger/fabric-x-common/msp/mgmt/testtools"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/msp"
+	mspmgmt "github.com/Chaguar/common/msp/mgmt"
+	msptesttools "github.com/Chaguar/common/msp/mgmt/testtools"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func createCIS() *pb.ChaincodeInvocationSpec {

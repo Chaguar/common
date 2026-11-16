@@ -17,7 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/cmd/common/signer"
+	"github.com/Chaguar/common/cmd/common/signer"
 )
 
 func TestCLI(t *testing.T) {

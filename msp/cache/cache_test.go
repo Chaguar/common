@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/msp/mocks"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/msp/mocks"
 )
 
 func TestNewCacheMsp(t *testing.T) {

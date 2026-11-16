@@ -18,7 +18,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protolator/protoext"
+	"github.com/Chaguar/common/protolator/protoext"
 )
 
 // MostlyDeterministicMarshal is _NOT_ the function you are looking for.

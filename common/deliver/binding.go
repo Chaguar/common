@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/util"
+	"github.com/Chaguar/common/common/util"
 )
 
 // BindingInspector receives as parameters a gRPC context and an Envelope,

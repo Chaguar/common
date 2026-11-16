@@ -29,7 +29,7 @@ jobs:
         run: |
           # Apply automatic formatting.
           gofmt -w .
-          goimports -local "github.com/hyperledger/fabric-x-common" -w .
+          goimports -local "github.com/Chaguar/common" -w .
           # Re make protobufs and mocks, overwriting any formatting
           PATH="$HOME/bin:$PATH" make proto
           PATH="$HOME/bin:$PATH" make mocks

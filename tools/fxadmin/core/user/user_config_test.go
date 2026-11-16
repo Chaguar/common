@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/user"
+	"github.com/Chaguar/common/tools/fxadmin/core/user"
 )
 
 const (

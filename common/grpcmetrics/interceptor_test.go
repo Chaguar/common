@@ -20,10 +20,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	"github.com/hyperledger/fabric-x-common/common/grpcmetrics"
-	"github.com/hyperledger/fabric-x-common/common/grpcmetrics/fakes"
-	"github.com/hyperledger/fabric-x-common/common/grpcmetrics/testpb"
-	"github.com/hyperledger/fabric-x-common/tools/test"
+	"github.com/Chaguar/common/common/grpcmetrics"
+	"github.com/Chaguar/common/common/grpcmetrics/fakes"
+	"github.com/Chaguar/common/common/grpcmetrics/testpb"
+	"github.com/Chaguar/common/tools/test"
 )
 
 var _ = ginkgo.Describe("Interceptor", func() {

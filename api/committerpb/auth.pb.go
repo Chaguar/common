@@ -336,7 +336,7 @@ const file_api_committerpb_auth_proto_rawDesc = "" +
 	"\n" +
 	"IssueNonce\x12\x16.google.protobuf.Empty\x1a\x1f.committerpb.IssueNonceResponse\x12k\n" +
 	"\x14AuthenticateIdentity\x12(.committerpb.AuthenticateIdentityRequest\x1a).committerpb.AuthenticateIdentityResponse\x12b\n" +
-	"\x11AuthorizeIdentity\x12%.committerpb.AuthorizeIdentityRequest\x1a&.committerpb.AuthorizeIdentityResponseB8Z6github.com/hyperledger/fabric-x-common/api/committerpbb\x06proto3"
+	"\x11AuthorizeIdentity\x12%.committerpb.AuthorizeIdentityRequest\x1a&.committerpb.AuthorizeIdentityResponseB+Z)github.com/Chaguar/common/api/committerpbb\x06proto3"
 
 var (
 	file_api_committerpb_auth_proto_rawDescOnce sync.Once

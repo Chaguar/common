@@ -20,8 +20,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
 
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
 var logger = flogging.MustGetLogger("fxadmin.decode")

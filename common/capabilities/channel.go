@@ -9,7 +9,7 @@ package capabilities
 import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/msp"
 )
 
 const (
