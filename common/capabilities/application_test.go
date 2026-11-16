@@ -16,7 +16,7 @@ import (
 func TestApplicationV10(t *testing.T) {
 	ap := NewApplicationProvider(map[string]*cb.Capability{})
 	require.NoError(t, ap.Supported())
-	// ACLs are always enabled in Fabric-X, regardless of capability version
+	// ACLs are always enabled in Chaguar, regardless of capability version
 	require.True(t, ap.ACLs())
 }
 
@@ -27,7 +27,7 @@ func TestApplicationV11(t *testing.T) {
 	require.NoError(t, ap.Supported())
 	require.True(t, ap.ForbidDuplicateTXIdInBlock())
 	require.True(t, ap.V1_1Validation())
-	// ACLs are always enabled in Fabric-X, regardless of capability version
+	// ACLs are always enabled in Chaguar, regardless of capability version
 	require.True(t, ap.ACLs())
 }
 

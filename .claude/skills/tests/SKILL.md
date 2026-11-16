@@ -1,9 +1,9 @@
 ---
 name: tests
-description: Write and run unit tests in the Fabric-X Common library — standard Go testing with testify, table-driven where it fits, reusing the repo's crypto/config-block/proto fixtures. Use whenever you add or change tests, or need to run the suite for packages you touched. New tests use standard `testing` + `testify`; do NOT add new Ginkgo suites (they are legacy). For authoring the production code under test use the `development` skill.
+description: Write and run unit tests in the Chaguar Common library — standard Go testing with testify, table-driven where it fits, reusing the repo's crypto/config-block/proto fixtures. Use whenever you add or change tests, or need to run the suite for packages you touched. New tests use standard `testing` + `testify`; do NOT add new Ginkgo suites (they are legacy). For authoring the production code under test use the `development` skill.
 ---
 
-# Testing in Fabric-X Common
+# Testing in Chaguar Common
 
 Guidelines for writing and running tests here. The bar: meaningful coverage of behavior and
 edge cases, minimal mocking, and reuse of the repo's fixtures instead of hand-rolled setup.

@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 // Package ordererconn extracts the orderer connection information — channel ID,
 // router and assembler endpoints, and the orderer organizations' TLS CA
-// certificates — from a Fabric-X config block.
+// certificates — from a Chaguar config block.
 package ordererconn
 
 import (

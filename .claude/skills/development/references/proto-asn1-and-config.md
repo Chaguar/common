@@ -81,7 +81,7 @@ configtx.yaml ──▶ configtxgen ──▶ ConfigGroup tree ──▶ genesis
   logic in `tools/`, not `cmd/`.
 
 `configtx.yaml` sections (see `sampleconfig/configtx.yaml`): `Organizations`, `Capabilities`,
-`Application`, `Orderer` (this is where the Fabric-X **ARMA** orderer type lives), `Channel`,
+`Application`, `Orderer` (this is where the Chaguar **ARMA** orderer type lives), `Channel`,
 `Profiles`.
 
 **When you add a config field, policy, or orderer parameter, keep the whole chain in sync:** the
@@ -91,7 +91,7 @@ example, is added to the encoder, the sample profile, and the policy-path tables
 `docs/configtx.md` (see how `SnapshotEndorsement` / `CheckpointEndorsement` were added). Add a test
 that the policy resolves via `bundle.PolicyManager().GetPolicy(...)`.
 
-Fabric-X divergence from upstream config to preserve: the `ARMA` orderer type.
+Chaguar divergence from upstream config to preserve: the `ARMA` orderer type.
 
 ## 4. JSON ⇄ protobuf
 

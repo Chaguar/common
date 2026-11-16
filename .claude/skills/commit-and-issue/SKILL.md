@@ -1,6 +1,6 @@
 ---
 name: commit-and-issue
-description: Write a commit message (which becomes the GitHub PR description verbatim) or open a GitHub issue for the Fabric-X Common repo, following the repo's PR template and conventions. Use whenever the user wants to commit staged changes, write or fix a commit/PR message, prepare a PR description, or open/file/create a GitHub issue for this project — even for terse asks like "commit this", "write the PR description", or "file an issue for this bug".
+description: Write a commit message (which becomes the GitHub PR description verbatim) or open a GitHub issue for the Chaguar Common repo, following the repo's PR template and conventions. Use whenever the user wants to commit staged changes, write or fix a commit/PR message, prepare a PR description, or open/file/create a GitHub issue for this project — even for terse asks like "commit this", "write the PR description", or "file an issue for this bug".
 ---
 
 # Commit messages and GitHub issues
@@ -12,7 +12,7 @@ user approves.
 
 The upstream repo for all `gh` operations (issues, and PRs via `--repo`) is
 **`Chaguar/common`**. PRs, however, are pushed from and opened off **your fork**
-(`<your-user>/fabric-x-common`), not upstream — see
+(`<your-user>/<fork-repo>`), not upstream — see
 [Push to your fork, then open the PR against upstream](#5-push-to-your-fork-then-open-the-pr-against-upstream).
 
 Pick the workflow that matches the request:
@@ -53,8 +53,8 @@ not under a new heading. (Issues are *not* bound by this — they're less formal
 [Opening a GitHub issue](#opening-a-github-issue).)
 
 **Issue references** — When referring to an issue or PR **in this repo**, use `#NNN`. Issues
-in **other Fabric-X repos** (orderer, committer, …) are referenced by **full URL**, e.g.
-`https://github.com/hyperledger/fabric-x-orderer/issues/956` — this is how cross-repo work is
+in **other Chaguar repos** (orderer, committer, …) are referenced by **full URL**, e.g.
+`https://github.com/Chaguar/orderer/issues/956` — this is how cross-repo work is
 tracked here. The keyword in front decides whether merging a PR **auto-closes** the issue, and
 the keyword is **always lowercase** (`resolves`, not `Resolves`):
 
@@ -173,7 +173,7 @@ which re-strips the headers; if you must edit interactively, add `--cleanup=whit
 ### 5. Push to your fork, then open the PR against upstream
 
 Contributors don't have push access to `Chaguar/common`, so the branch must live on
-**your fork**, and the PR is opened from `your-fork:branch` into `hyperledger:main`. Never push
+**your fork**, and the PR is opened from `your-fork:branch` into `Chaguar:main`. Never push
 feature branches to the upstream remote.
 
 Inspect the remotes and pick by **URL, not by name** — a clone may carry extra or renamed remotes
@@ -190,7 +190,7 @@ fork's owner rather than hardcoding a name:
 
 ```bash
 FORK_OWNER=$(gh api user -q .login)          # your GitHub login
-FORK_REMOTE=$(git remote -v | awk -v u="$FORK_OWNER/fabric-x-common" '$2 ~ u {print $1; exit}')
+FORK_REMOTE=$(git remote -v | awk -v u="$FORK_OWNER/" 'index($2, u) {print $1; exit}')
 ```
 
 Push the branch to the fork and open the PR with an explicit cross-repo `--head`:

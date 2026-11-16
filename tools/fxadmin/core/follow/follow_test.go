@@ -252,7 +252,7 @@ func newFollowInputs(t *testing.T, channelID string, assemblerEndpoints []string
 	targetPath := t.TempDir()
 	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:  targetPath,
-		BaseProfile: configtxgen.SampleFabricX,
+		BaseProfile: configtxgen.SampleChaguar,
 		ChannelID:   channelID,
 		Organizations: []cryptogen.OrganizationParameters{{
 			Name:             "orderer-org-1",

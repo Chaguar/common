@@ -662,7 +662,7 @@ func newNodeTestMaterial(t *testing.T) *nodeTestMaterial {
 	cryptoDir := t.TempDir()
 	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:  cryptoDir,
-		BaseProfile: configtxgen.SampleFabricX,
+		BaseProfile: configtxgen.SampleChaguar,
 		ChannelID:   "mychannel",
 		Organizations: []cryptogen.OrganizationParameters{{
 			Name:   nodeTestOrg,

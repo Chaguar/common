@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 // Package test provides in-process AtomicBroadcast servers for testing the
-// broadcast of envelopes to Fabric-X routers.
+// broadcast of envelopes to Chaguar routers.
 package test
 
 import (
