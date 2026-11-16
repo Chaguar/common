@@ -18,7 +18,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	goleveldbutil "github.com/syndtr/goleveldb/leveldb/util"
 
-	"github.com/hyperledger/fabric-x-common/tools/fileutil"
+	"github.com/Chaguar/common/tools/fileutil"
 )
 
 var logger = flogging.MustGetLogger("leveldbhelper")

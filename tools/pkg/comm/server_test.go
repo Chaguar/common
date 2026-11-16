@@ -30,9 +30,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	"github.com/hyperledger/fabric-x-common/common/crypto/tlsgen"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/comm"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/comm/testpb"
+	"github.com/Chaguar/common/common/crypto/tlsgen"
+	"github.com/Chaguar/common/tools/pkg/comm"
+	"github.com/Chaguar/common/tools/pkg/comm/testpb"
 )
 
 // Embedded certificates for testing

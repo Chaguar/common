@@ -14,7 +14,7 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/core/config/configtest"
+	"github.com/Chaguar/common/core/config/configtest"
 )
 
 func TestSetupBCCSPKeystoreConfig(t *testing.T) {

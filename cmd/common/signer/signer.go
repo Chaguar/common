@@ -23,9 +23,9 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/utils/certificate"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/utils/certificate"
 )
 
 // Config holds the configuration for

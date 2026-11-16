@@ -23,7 +23,7 @@ import (
 	"github.com/onsi/gomega"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
+	"github.com/Chaguar/common/api/msppb"
 )
 
 var (

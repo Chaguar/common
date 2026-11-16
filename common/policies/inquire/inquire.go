@@ -12,8 +12,8 @@ import (
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 
-	"github.com/hyperledger/fabric-x-common/common/graph"
-	"github.com/hyperledger/fabric-x-common/common/policies"
+	"github.com/Chaguar/common/common/graph"
+	"github.com/Chaguar/common/common/policies"
 )
 
 var logger = flogging.MustGetLogger("policies.inquire")

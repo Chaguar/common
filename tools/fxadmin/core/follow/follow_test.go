@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -21,14 +20,15 @@ import (
 	"go.yaml.in/yaml/v3"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
-	"github.com/hyperledger/fabric-x-common/tools/cryptogen"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/client"
-	clienttest "github.com/hyperledger/fabric-x-common/tools/fxadmin/core/client/test"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/follow"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/user"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/tools/configtxgen"
+	"github.com/Chaguar/common/tools/cryptogen"
+	"github.com/Chaguar/common/tools/fxadmin/core/client"
+	clienttest "github.com/Chaguar/common/tools/fxadmin/core/client/test"
+	"github.com/Chaguar/common/tools/fxadmin/core/follow"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/user"
 )
 
 // TestRunAllAssemblersCommitted asserts that when every assembler has committed
@@ -244,15 +244,7 @@ func newFollowInputs(t *testing.T, channelID string, assemblerEndpoints []string
 
 	shared := &ordererpb.SharedConfig{}
 	for i, endpoint := range assemblerEndpoints {
-		host, portStr, err := net.SplitHostPort(endpoint)
-		require.NoError(t, err)
-		port, err := strconv.ParseUint(portStr, 10, 32)
-		require.NoError(t, err)
-		shared.PartiesConfig = append(shared.PartiesConfig, &ordererpb.PartyConfig{
-			PartyID:         uint32(i + 1),
-			RouterConfig:    &ordererpb.RouterNodeConfig{Host: host, Port: uint32(port)},
-			AssemblerConfig: &ordererpb.AssemblerNodeConfig{Host: host, Port: uint32(port)},
-		})
+		shared.PartiesConfig = append(shared.PartiesConfig, clienttest.ArmaParty(t, uint32(i+1), endpoint, endpoint))
 	}
 	meta, err := proto.Marshal(shared)
 	require.NoError(t, err)
@@ -299,7 +291,7 @@ func newFollowInputs(t *testing.T, channelID string, assemblerEndpoints []string
 // its config sequence.
 func sequenceOfWrittenBlock(t *testing.T, path string) uint64 {
 	t.Helper()
-	block, err := client.ReadConfigBlock(path)
+	block, err := helpers.ReadConfigBlock(path)
 	require.NoError(t, err)
 	sequence, err := client.SequenceFromBlock(block)
 	require.NoError(t, err)

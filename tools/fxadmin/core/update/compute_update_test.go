@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/update"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/fxadmin/core/update"
 )
 
 // testChannelID is the channel the config block written by writeConfigBlock

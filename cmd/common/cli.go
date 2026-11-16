@@ -14,8 +14,8 @@ import (
 
 	"github.com/alecthomas/kingpin/v2"
 
-	"github.com/hyperledger/fabric-x-common/cmd/common/comm"
-	"github.com/hyperledger/fabric-x-common/cmd/common/signer"
+	"github.com/Chaguar/common/cmd/common/comm"
+	"github.com/Chaguar/common/cmd/common/signer"
 )
 
 const (

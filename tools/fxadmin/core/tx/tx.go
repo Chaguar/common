@@ -19,12 +19,12 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/client"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/signer"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/user"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/fxadmin/core/client"
+	"github.com/Chaguar/common/tools/fxadmin/core/signer"
+	"github.com/Chaguar/common/tools/fxadmin/core/user"
 )
 
 var logger = flogging.MustGetLogger("fxadmin.tx")

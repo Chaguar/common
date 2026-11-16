@@ -12,8 +12,8 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/common/deliver/mock"
-	"github.com/hyperledger/fabric-x-common/common/ledger/blockledger"
+	"github.com/Chaguar/common/common/deliver/mock"
+	"github.com/Chaguar/common/common/ledger/blockledger"
 )
 
 func TestClose(t *testing.T) {

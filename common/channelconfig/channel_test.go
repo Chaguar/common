@@ -16,7 +16,7 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/common/util"
+	"github.com/Chaguar/common/common/util"
 )
 
 func TestInterface(t *testing.T) {

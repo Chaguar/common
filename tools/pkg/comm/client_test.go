@@ -22,8 +22,8 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/tools/pkg/comm"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/comm/testpb"
+	"github.com/Chaguar/common/tools/pkg/comm"
+	"github.com/Chaguar/common/tools/pkg/comm/testpb"
 )
 
 const testTimeout = 1 * time.Second // conservative

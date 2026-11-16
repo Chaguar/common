@@ -5,8 +5,8 @@
 package mocks
 
 import (
+	"github.com/Chaguar/common/common/policies"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
-	"github.com/hyperledger/fabric-x-common/common/policies"
 	mock "github.com/stretchr/testify/mock"
 )
 

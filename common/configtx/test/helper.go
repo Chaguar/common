@@ -12,12 +12,12 @@ import (
 	mspproto "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	pb "github.com/hyperledger/fabric-protos-go-apiv2/peer"
 
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/common/genesis"
-	"github.com/hyperledger/fabric-x-common/core/config/configtest"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/txflags"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/common/genesis"
+	"github.com/Chaguar/common/core/config/configtest"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/configtxgen"
+	"github.com/Chaguar/common/tools/pkg/txflags"
 )
 
 var logger = flogging.MustGetLogger("common.configtx.test")

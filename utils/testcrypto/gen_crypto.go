@@ -13,9 +13,9 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
-	"github.com/hyperledger/fabric-x-common/tools/cryptogen"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/tools/configtxgen"
+	"github.com/Chaguar/common/tools/cryptogen"
 )
 
 // ConfigBlock represents the configuration of the config block.

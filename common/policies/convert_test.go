@@ -14,11 +14,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/common/cauthdsl"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/common/policydsl"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/common/cauthdsl"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/common/policydsl"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func TestImplicitMetaPolicy_Convert(t *testing.T) {

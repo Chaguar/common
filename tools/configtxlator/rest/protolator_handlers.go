@@ -18,7 +18,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/hyperledger/fabric-x-common/protolator"
+	"github.com/Chaguar/common/protolator"
 )
 
 func getMsgType(r *http.Request) (proto.Message, error) {

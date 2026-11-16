@@ -13,7 +13,7 @@ import (
 	ab "github.com/hyperledger/fabric-protos-go-apiv2/orderer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/seek"
+	"github.com/Chaguar/common/tools/fxadmin/core/seek"
 )
 
 func TestNewest(t *testing.T) {

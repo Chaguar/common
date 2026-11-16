@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"go.yaml.in/yaml/v3"
 
-	"github.com/hyperledger/fabric-x-common/cmd/common/comm"
-	"github.com/hyperledger/fabric-x-common/cmd/common/signer"
+	"github.com/Chaguar/common/cmd/common/comm"
+	"github.com/Chaguar/common/cmd/common/signer"
 )
 
 // Config aggregates configuration of TLS and signing

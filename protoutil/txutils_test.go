@@ -27,9 +27,9 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/protoutil/identity/mocks"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/protoutil/identity/mocks"
 )
 
 func TestGetPayloads(t *testing.T) {

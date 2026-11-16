@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 syntax = "proto3";
 
-option go_package = "github.com/hyperledger/fabric-x-common/api/applicationpb";
+option go_package = "github.com/Chaguar/common/api/applicationpb";
 
 package applicationpb;
 

@@ -28,11 +28,11 @@ import (
 	"google.golang.org/grpc/health"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/test"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/test"
 )
 
 func TestMakeConfig(t *testing.T) {

@@ -17,10 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/sampleconfig"
-	"github.com/hyperledger/fabric-x-common/tools/test"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/sampleconfig"
+	"github.com/Chaguar/common/tools/test"
 )
 
 func TestGenerate(t *testing.T) { //nolint:gocognit // cognitive complexity 30.

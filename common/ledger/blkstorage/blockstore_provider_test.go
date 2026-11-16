@@ -16,10 +16,10 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/peer"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/common/ledger"
-	"github.com/hyperledger/fabric-x-common/common/ledger/testutil"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/txflags"
+	"github.com/Chaguar/common/common/ledger"
+	"github.com/Chaguar/common/common/ledger/testutil"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/pkg/txflags"
 )
 
 func TestIndexConfig(t *testing.T) {

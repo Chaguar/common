@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/utils/test"
+	"github.com/Chaguar/common/utils/test"
 )
 
 // TestTx represents a test transaction for ASN1 marshalling tests.

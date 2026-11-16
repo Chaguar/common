@@ -22,10 +22,10 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/configtxlator/update"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/configtxlator/update"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
 var logger = flogging.MustGetLogger("fxadmin.compute-update")

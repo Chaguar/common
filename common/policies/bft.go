@@ -12,9 +12,9 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	mspa "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/policydsl"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/policydsl"
+	"github.com/Chaguar/common/protoutil"
 )
 
 const (

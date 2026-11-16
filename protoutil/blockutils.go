@@ -21,8 +21,8 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/crypto"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/crypto"
 )
 
 var logger = flogging.MustGetLogger("protoutil")

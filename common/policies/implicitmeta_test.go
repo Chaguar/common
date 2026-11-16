@@ -13,8 +13,8 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
 )
 
 const TestPolicyName = "TestPolicyName"

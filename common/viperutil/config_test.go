@@ -16,7 +16,7 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
+	"github.com/Chaguar/common/api/types"
 )
 
 const (

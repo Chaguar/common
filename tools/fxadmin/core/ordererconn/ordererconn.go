@@ -10,18 +10,19 @@ SPDX-License-Identifier: Apache-2.0
 package ordererconn
 
 import (
+	"fmt"
+	"math"
 	"net"
 	"strconv"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hyperledger/fabric-lib-go/bccsp"
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
-	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
 // Info holds everything needed to dial the orderer, extracted from a config
@@ -55,11 +56,8 @@ func Load(block *cb.Block, csp bccsp.BCCSP) (*Info, error) {
 		return nil, errors.New("config block has no orderer configuration")
 	}
 
-	if consensusType := ordererConfig.ConsensusType(); consensusType != configtxgen.Arma {
-		return nil, errors.Newf("unsupported consensus type %q: expected %q", consensusType, configtxgen.Arma)
-	}
-
-	sharedConfig, err := unmarshalSharedConfig(ordererConfig.ConsensusMetadata())
+	sharedConfig, err := helpers.UnmarshalArmaSharedConfig(ordererConfig.ConsensusType(),
+		ordererConfig.ConsensusMetadata())
 	if err != nil {
 		return nil, err
 	}
@@ -67,37 +65,42 @@ func Load(block *cb.Block, csp bccsp.BCCSP) (*Info, error) {
 	return infoFromSharedConfig(bundle.ConfigtxValidator().ChannelID(), sharedConfig)
 }
 
-// unmarshalSharedConfig parses the ARMA shared config from consensus metadata.
-func unmarshalSharedConfig(metadata []byte) (*ordererpb.SharedConfig, error) {
-	sharedConfig := &ordererpb.SharedConfig{}
-	if err := proto.Unmarshal(metadata, sharedConfig); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal ARMA shared config from consensus metadata")
-	}
-	return sharedConfig, nil
-}
-
 // infoFromSharedConfig collects each party's router and assembler endpoints and
 // TLS CA certificates from an ARMA shared config into an Info for the given
-// channel.
+// channel. It errors if the shared config has no parties, or if a party's
+// router or assembler is missing or has an invalid endpoint.
 func infoFromSharedConfig(channelID string, shared *ordererpb.SharedConfig) (*Info, error) {
+	if len(shared.GetPartiesConfig()) == 0 {
+		return nil, errors.New("the ARMA shared config has no parties")
+	}
 	info := &Info{ChannelID: channelID, NumParties: len(shared.GetPartiesConfig())}
 	for _, party := range shared.GetPartiesConfig() {
-		if router := party.GetRouterConfig(); router != nil {
-			info.RouterEndpoints = append(info.RouterEndpoints,
-				net.JoinHostPort(router.GetHost(), strconv.Itoa(int(router.GetPort()))))
+		router, err := nodeEndpoint(party.GetRouterConfig().GetNodeConfig())
+		if err != nil {
+			return nil, fmt.Errorf("router of party %d: %w", party.GetPartyID(), err)
 		}
-		if assembler := party.GetAssemblerConfig(); assembler != nil {
-			info.AssemblerEndpoints = append(info.AssemblerEndpoints,
-				net.JoinHostPort(assembler.GetHost(), strconv.Itoa(int(assembler.GetPort()))))
+		assembler, err := nodeEndpoint(party.GetAssemblerConfig().GetNodeConfig())
+		if err != nil {
+			return nil, fmt.Errorf("assembler of party %d: %w", party.GetPartyID(), err)
 		}
+		info.RouterEndpoints = append(info.RouterEndpoints, router)
+		info.AssemblerEndpoints = append(info.AssemblerEndpoints, assembler)
 		info.TLSCACerts = append(info.TLSCACerts, party.GetTLSCACerts()...)
 	}
-
-	if len(info.RouterEndpoints) == 0 {
-		return nil, errors.New("config block has no router endpoints")
-	}
-	if len(info.AssemblerEndpoints) == 0 {
-		return nil, errors.New("config block has no assembler endpoints")
-	}
 	return info, nil
+}
+
+// nodeEndpoint returns the "host:port" endpoint of a node config. It errors if
+// the node is not configured, its host is empty, or its port is not 1-65535.
+func nodeEndpoint(node *ordererpb.NodeConfig) (string, error) {
+	if node == nil {
+		return "", errors.New("not configured")
+	}
+	if node.GetHost() == "" {
+		return "", errors.New("empty host")
+	}
+	if port := node.GetPort(); port == 0 || port > math.MaxUint16 {
+		return "", errors.Newf("invalid port %d", port)
+	}
+	return net.JoinHostPort(node.GetHost(), strconv.Itoa(int(node.GetPort()))), nil
 }

@@ -16,8 +16,8 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
 
-	"github.com/hyperledger/fabric-x-common/common/metadata"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
+	"github.com/Chaguar/common/common/metadata"
+	"github.com/Chaguar/common/tools/configtxgen"
 )
 
 var logger = flogging.MustGetLogger("common.tools.configtxgen")

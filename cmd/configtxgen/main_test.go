@@ -16,8 +16,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/core/config/configtest"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
+	"github.com/Chaguar/common/core/config/configtest"
+	"github.com/Chaguar/common/tools/configtxgen"
 )
 
 func TestConfigTxFlags(t *testing.T) {

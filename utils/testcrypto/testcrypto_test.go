@@ -14,11 +14,11 @@ import (
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/cryptogen"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/cryptogen"
 )
 
 // TestCreateOrExtendConfigBlockWithCrypto tests the creation of config blocks with crypto material.

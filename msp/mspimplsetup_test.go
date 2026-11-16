@@ -15,8 +15,8 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"github.com/onsi/gomega"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/crypto/tlsgen"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/crypto/tlsgen"
 )
 
 var (

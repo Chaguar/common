@@ -14,9 +14,9 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-x-common/common/capabilities"
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/common/capabilities"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/msp"
 )
 
 // Channel config keys

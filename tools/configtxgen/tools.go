@@ -16,10 +16,10 @@ import (
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ordererext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/peerext"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/protolator/protoext/peerext"
+	"github.com/Chaguar/common/protoutil"
 )
 
 var logger = flogging.MustGetLogger("common.tools.configtxgen")

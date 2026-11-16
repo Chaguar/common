@@ -19,7 +19,7 @@ import (
 	"go.yaml.in/yaml/v3"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
+	"github.com/Chaguar/common/api/msppb"
 )
 
 // OrganizationalUnitIdentifiersConfiguration is used to represent an OU

@@ -13,9 +13,9 @@ import (
 	ab "github.com/hyperledger/fabric-protos-go-apiv2/orderer"
 	pb "github.com/hyperledger/fabric-protos-go-apiv2/peer"
 
-	"github.com/hyperledger/fabric-x-common/common/configtx"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/common/configtx"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/msp"
 )
 
 // Org stores the common organizational config

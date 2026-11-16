@@ -15,8 +15,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/cli"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/modify/change"
+	"github.com/Chaguar/common/tools/fxadmin/core/cli"
+	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
 // Repeated command names, flags, and argument tokens used across the tables.

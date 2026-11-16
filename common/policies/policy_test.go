@@ -20,11 +20,11 @@ import (
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/common/crypto/tlsgen"
-	"github.com/hyperledger/fabric-x-common/common/policies/mocks"
-	mspi "github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/common/crypto/tlsgen"
+	"github.com/Chaguar/common/common/policies/mocks"
+	mspi "github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
 )
 
 //go:generate counterfeiter -o mocks/identity_deserializer.go --fake-name IdentityDeserializer . identityDeserializer

@@ -11,7 +11,7 @@ package signer
 import (
 	"github.com/cockroachdb/errors"
 
-	"github.com/hyperledger/fabric-x-common/msp"
+	"github.com/Chaguar/common/msp"
 )
 
 // New loads the local MSP at mspDir under the given MSP ID and returns its

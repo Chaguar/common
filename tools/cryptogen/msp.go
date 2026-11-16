@@ -17,7 +17,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.yaml.in/yaml/v3"
 
-	fabricmsp "github.com/hyperledger/fabric-x-common/msp"
+	fabricmsp "github.com/Chaguar/common/msp"
 )
 
 // mspTree represents the MSP tree structure.

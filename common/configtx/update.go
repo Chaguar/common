@@ -13,8 +13,8 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/protoutil"
 )
 
 func (vi *ValidatorImpl) verifyReadSet(readSet map[string]comparable) error {

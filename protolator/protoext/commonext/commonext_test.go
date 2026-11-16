@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package commonext_test
 
 import (
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/commonext"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/protolator/protoext/commonext"
 )
 
 // ensure structs implement expected interfaces

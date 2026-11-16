@@ -90,7 +90,7 @@ const file_echo_proto_rawDesc = "" +
 	"\vEchoService\x12(\n" +
 	"\x04Echo\x12\x0f.testpb.Message\x1a\x0f.testpb.Message\x122\n" +
 	"\n" +
-	"EchoStream\x12\x0f.testpb.Message\x1a\x0f.testpb.Message(\x010\x01BBZ@github.com/hyperledger/fabric-x-common/common/grpcmetrics/testpbb\x06proto3"
+	"EchoStream\x12\x0f.testpb.Message\x1a\x0f.testpb.Message(\x010\x01B5Z3github.com/Chaguar/common/common/grpcmetrics/testpbb\x06proto3"
 
 var (
 	file_echo_proto_rawDescOnce sync.Once

@@ -12,9 +12,9 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
-	"github.com/hyperledger/fabric-x-common/common/crypto/tlsgen"
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/tools/pkg/comm"
+	"github.com/Chaguar/common/common/crypto/tlsgen"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/tools/pkg/comm"
 )
 
 const defaultTimeout = time.Second * 5

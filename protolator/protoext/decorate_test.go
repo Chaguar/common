@@ -18,11 +18,11 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
 
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/commonext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ledger/rwsetext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/mspext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ordererext"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/peerext"
+	"github.com/Chaguar/common/protolator/protoext/commonext"
+	"github.com/Chaguar/common/protolator/protoext/ledger/rwsetext"
+	"github.com/Chaguar/common/protolator/protoext/mspext"
+	"github.com/Chaguar/common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/protolator/protoext/peerext"
 )
 
 type GenericProtoMessage struct {

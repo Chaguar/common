@@ -12,11 +12,11 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/pkg/errors"
 
-	"github.com/hyperledger/fabric-x-common/common/cauthdsl"
-	"github.com/hyperledger/fabric-x-common/common/configtx"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
+	"github.com/Chaguar/common/common/cauthdsl"
+	"github.com/Chaguar/common/common/configtx"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
 )
 
 var logger = flogging.MustGetLogger("common.channelconfig")

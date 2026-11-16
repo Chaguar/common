@@ -16,15 +16,15 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/common/genesis"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/common/policydsl"
-	"github.com/hyperledger/fabric-x-common/common/util"
-	"github.com/hyperledger/fabric-x-common/msp"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/protoutil/identity"
-	"github.com/hyperledger/fabric-x-common/tools/configtxlator/update"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/common/genesis"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/common/policydsl"
+	"github.com/Chaguar/common/common/util"
+	"github.com/Chaguar/common/msp"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/protoutil/identity"
+	"github.com/Chaguar/common/tools/configtxlator/update"
 )
 
 const (

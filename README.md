@@ -3,22 +3,24 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 -->
-# Fabric-X Common
+# Chaguar Common
 
-[![Coverage Status](https://coveralls.io/repos/github/hyperledger/fabric-x-common/badge.svg?branch=main)](https://coveralls.io/github/hyperledger/fabric-x-common?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/Chaguar/common/badge.svg?branch=main)](https://coveralls.io/github/Chaguar/common?branch=main)
 
-This library encapsulates some common code across Fabric-X ecosystem.
-This code have been taken from [Hyperledger Fabric](https://github.com/hyperledger/fabric) v3.0.0-rc1.
+This library encapsulates some common code across the Chaguar ecosystem.
+
+## Origin of this code
+
+Most of this code has been taken from [Hyperledger Fabric](https://github.com/hyperledger/fabric) v3.0.0-rc1, and has since been updated and augmented to suit Chaguar's needs.
 
 ### Config
 Uses [Hyperledger Fabric Config](https://github.com/hyperledger/fabric-config) v0.3.0
 
 - common/configtx
-- internaltools/configtxgen
+- tools/configtxgen
 
 This modifies Fabric's config block:
 * Added ARMA field for orderer type
-* Added `MetaNamespacePolicyKey` field
 
 ### MSP
 - hyperledger/fabric/msp
@@ -31,4 +33,4 @@ This modifies Fabric's config block:
 ### Tools
 - hyperledger/fabric/cmd/configtxgen
 - hyperledger/fabric/cmd/configtxlator
-- hyperledger/fabric/cmd/osnadmin
+- hyperledger/fabric/cmd/cryptogen
