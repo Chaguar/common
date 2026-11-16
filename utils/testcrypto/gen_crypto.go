@@ -105,7 +105,7 @@ func CreateOrExtendConfigBlockWithCrypto(targetPath string, conf *ConfigBlock) (
 	// in the profile.
 	return cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:    targetPath,
-		BaseProfile:   configtxgen.SampleFabricX,
+		BaseProfile:   configtxgen.SampleChaguar,
 		ChannelID:     conf.ChannelID,
 		Organizations: orgs,
 		EnableNodeOUs: conf.EnableNodeOUs,

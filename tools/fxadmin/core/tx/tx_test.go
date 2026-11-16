@@ -725,7 +725,7 @@ func writeSubmitInputs(t *testing.T, channelID string, shared *ordererpb.SharedC
 	targetPath := t.TempDir()
 	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:  targetPath,
-		BaseProfile: configtxgen.SampleFabricX,
+		BaseProfile: configtxgen.SampleChaguar,
 		ChannelID:   channelID,
 		Organizations: []cryptogen.OrganizationParameters{{
 			Name:             "orderer-org-1",
