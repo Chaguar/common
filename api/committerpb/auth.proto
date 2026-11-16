@@ -11,6 +11,7 @@ option go_package = "github.com/Chaguar/common/api/committerpb";
 package committerpb;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 import "common/common.proto";
 
 // AuthService is the central authentication and authorization service. It hands out single-use
@@ -30,7 +31,7 @@ import "common/common.proto";
 //     |<-----------------|                                   |
 //     | RPC + token -------------------------------------->  |
 //     |                  |<-- AuthorizeIdentity(token, rpc) -|
-//     |                  |--- allowed, token_expires_at ---->|
+//     |                  |--- allowed, token_expire_time --->|
 service AuthService {
     // IssueNonce issues a single-use, short-lived nonce the client must embed in the SignatureHeader of
     // the envelope it then presents to AuthenticateIdentity. It is the mandatory first step of
@@ -44,7 +45,7 @@ service AuthService {
     // changes both take effect on an established stream.
     //
     // It is part of the client API too: a client can call it on its own token to check that the token is
-    // still accepted for a resource and when it expires (token_expires_at), so it renews the token before
+    // still accepted for a resource and when it expires (token_expire_time), so it renews the token before
     // its RPCs start failing rather than after. The client passes its own TLS certificate hash, the one
     // the token is bound to.
     rpc AuthorizeIdentity(AuthorizeIdentityRequest) returns (AuthorizeIdentityResponse);
@@ -52,10 +53,10 @@ service AuthService {
 
 message IssueNonceResponse {
     // nonce is the server-issued challenge the client places in its envelope's SignatureHeader.Nonce.
-    // It is valid for a single AuthenticateIdentity call and expires at expires_at.
+    // It is valid for a single AuthenticateIdentity call and expires at expire_time.
     bytes nonce = 1;
-    // expires_at is the nonce expiry in unix seconds.
-    int64 expires_at = 2;
+    // expire_time is the time the nonce expires.
+    google.protobuf.Timestamp expire_time = 2;
 }
 
 message AuthenticateIdentityRequest {
@@ -74,8 +75,8 @@ message AuthenticateIdentityRequest {
 message AuthenticateIdentityResponse {
     // token is the issued cert-bound opaque token the client attaches to subsequent RPCs.
     string token = 1;
-    // expires_at is the token expiry in unix seconds.
-    int64 expires_at = 2;
+    // expire_time is the time the token expires.
+    google.protobuf.Timestamp expire_time = 2;
 }
 
 message AuthorizeIdentityRequest {
@@ -92,7 +93,7 @@ message AuthorizeIdentityRequest {
 // gRPC status error (Unauthenticated for an invalid, expired, or unknown token or a certificate mismatch;
 // PermissionDenied for a scope or policy denial; Unavailable before the configuration is loaded).
 message AuthorizeIdentityResponse {
-    // token_expires_at is the bound token's expiry in unix seconds. A resource server ends a stream at it,
+    // token_expire_time is the time the bound token expires. A resource server ends a stream at it,
     // so an expired token cannot keep an established stream alive.
-    int64 token_expires_at = 1;
+    google.protobuf.Timestamp token_expire_time = 1;
 }
