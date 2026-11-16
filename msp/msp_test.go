@@ -460,7 +460,7 @@ func TestValidateCANameConstraintsMitigation(t *testing.T) {
 	})
 
 	t.Run("ValidationAtSetup", func(t *testing.T) {
-		fabricXMSPConfig := &msppb.FabricMSPConfig{
+		fabricMSPConfig := &msppb.FabricMSPConfig{
 			Name:      "ConstraintsMSP",
 			RootCerts: [][]byte{caCertPem},
 			SigningIdentity: &msp.SigningIdentityInfo{
@@ -472,7 +472,7 @@ func TestValidateCANameConstraintsMitigation(t *testing.T) {
 			},
 		}
 		mspConfig := &msp.MSPConfig{
-			Config: protoutil.MarshalOrPanic(fabricXMSPConfig),
+			Config: protoutil.MarshalOrPanic(fabricMSPConfig),
 		}
 
 		ks, err := sw.NewFileBasedKeyStore(nil, filepath.Join(configtest.GetDevMspDir(), "keystore"), true)

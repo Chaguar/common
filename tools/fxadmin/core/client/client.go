@@ -4,7 +4,7 @@ Copyright IBM Corp. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-// Package client connects to the Fabric-X orderer. It combines the user
+// Package client connects to the Chaguar orderer. It combines the user
 // identity and client-TLS material (user.Config) with the orderer
 // connection information read from a config block (ordererconn.Info)
 // to sign and send seek and broadcast envelopes to assemblers and routers.

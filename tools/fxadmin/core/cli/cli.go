@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 // Package cli builds the fxadmin command tree. fxadmin administers the
-// configuration of Fabric-X: it pulls the current configuration from the
+// configuration of Chaguar: it pulls the current configuration from the
 // running network, decodes it, computes and endorses a configuration update,
 // wraps it into a submittable transaction, submits it, and follows the
 // assembler ledger until the change is committed.
@@ -56,7 +56,7 @@ type CLI struct {
 // New builds the fxadmin CLI around the given handlers. The version string is
 // surfaced through the --version flag. No command is executed until Run is called.
 func New(handlers Handlers, version string) *CLI {
-	app := kingpin.New("fxadmin", "Fabric-X reconfiguration admin CLI.")
+	app := kingpin.New("fxadmin", "Chaguar reconfiguration admin CLI.")
 	app.Version(version)
 
 	c := &CLI{

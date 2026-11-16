@@ -250,7 +250,7 @@ func createConfigBlockPath(
 	}
 	_, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:    cryptoDir,
-		BaseProfile:   configtxgen.SampleFabricX,
+		BaseProfile:   configtxgen.SampleChaguar,
 		ChannelID:     channelID,
 		Organizations: orgs,
 	})

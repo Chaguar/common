@@ -1,7 +1,7 @@
 ---
 name: development
 description: >-
-  Conventions for writing NEW Go code in the Fabric-X Common library: matching the
+  Conventions for writing NEW Go code in the Chaguar Common library: matching the
   Fabric-ported style, license headers, the strict golangci-lint set, error handling
   (cockroachdb/errors), logging (flogging), Go 1.27 idioms, and reuse of protoutil /
   common / utils helpers. Use this skill BEFORE writing or modifying any Go source in
@@ -11,7 +11,7 @@ description: >-
   docs with `doc-audit`.
 ---
 
-# Developing in Fabric-X Common
+# Developing in Chaguar Common
 
 This skill tells you how to write Go that looks like it already belonged in this library.
 Follow it whenever you add or change production Go source.
@@ -124,7 +124,7 @@ Don't `Fatal`/`Panic` in library code — return an error.
 
 ## Concurrency
 
-Unlike some sibling Fabric-X repos, **this library is largely synchronous** — only one package
+Unlike some sibling Chaguar repos, **this library is largely synchronous** — only one package
 uses `errgroup`, and there is no repo-specific channel-wrapper doctrine. If you genuinely need
 concurrency, use the standard toolkit (`errgroup.WithContext`, `context` cancellation,
 `sync`/`atomic`) and pass the group context into goroutines. Don't import a concurrency framework

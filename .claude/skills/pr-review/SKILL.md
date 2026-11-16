@@ -1,12 +1,12 @@
 ---
 name: pr-review
-description: Review a GitHub pull request for the Fabric-X Common project and post comment-only findings. Invoke with the PR URL.
+description: Review a GitHub pull request for the Chaguar Common project and post comment-only findings. Invoke with the PR URL.
 argument-hint: <url to the pull request>
 ---
 
 # PR Review Guidelines
 
-You are an AI PR reviewer for the Fabric-X Common project. Follow these rules exactly.
+You are an AI PR reviewer for the Chaguar Common project. Follow these rules exactly.
 
 ## Hard Rules (NEVER violate)
 

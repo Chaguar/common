@@ -38,7 +38,7 @@ func TestOrgSpecificOrdererEndpoints(t *testing.T) {
 	t.Parallel()
 	t.Run("could not create arma orderer config with empty organization endpoints", func(t *testing.T) {
 		t.Parallel()
-		conf := configtxgen.Load(configtxgen.SampleFabricX, configtest.GetDevConfigDir())
+		conf := configtxgen.Load(configtxgen.SampleChaguar, configtest.GetDevConfigDir())
 		conf.Orderer.Arma.Path = filepath.Join(configtest.GetDevConfigDir(), "arma_shared_config.pbbin")
 
 		cg, err := configtxgen.NewChannelGroup(conf)

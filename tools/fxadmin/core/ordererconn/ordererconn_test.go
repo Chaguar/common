@@ -138,7 +138,7 @@ func newConfigBlock(t *testing.T, channelID string, sharedConfig *ordererpb.Shar
 
 	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:  t.TempDir(),
-		BaseProfile: configtxgen.SampleFabricX,
+		BaseProfile: configtxgen.SampleChaguar,
 		ChannelID:   channelID,
 		Organizations: []cryptogen.OrganizationParameters{{
 			Name:   "orderer-org-1",

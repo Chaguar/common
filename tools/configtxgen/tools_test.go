@@ -162,7 +162,7 @@ func TestBftOrdererTypeWithoutCapabilitiesShouldNotRaiseAnError(t *testing.T) {
 	require.NoError(t, DoOutputBlock(config, "testChannelId", blockDest))
 }
 
-func TestFabricXGenesisBlock(t *testing.T) {
+func TestChaguarGenesisBlock(t *testing.T) {
 	t.Parallel()
 
 	allAPI := []string{types.Broadcast, types.Deliver}
@@ -172,7 +172,7 @@ func TestFabricXGenesisBlock(t *testing.T) {
 		expectedEndpoints []*types.OrdererEndpoint
 	}{
 		{
-			sample: SampleFabricX,
+			sample: SampleChaguar,
 			expectedEndpoints: []*types.OrdererEndpoint{
 				{MspID: "SampleOrg", ID: 0, API: allAPI[:1], Host: "orderer-1", Port: 7050},
 				{MspID: "SampleOrg", ID: 0, API: allAPI[1:], Host: "orderer-1", Port: 7060},
@@ -180,7 +180,7 @@ func TestFabricXGenesisBlock(t *testing.T) {
 				{MspID: "SampleOrg", ID: 2, API: nil, Host: "orderer-3", Port: 7050},
 			},
 		}, {
-			sample: TwoOrgsSampleFabricX,
+			sample: TwoOrgsSampleChaguar,
 			expectedEndpoints: []*types.OrdererEndpoint{
 				{MspID: "Org1", ID: 0, API: allAPI[:1], Host: "localhost", Port: 7050},
 				{MspID: "Org1", ID: 0, API: allAPI[1:], Host: "localhost", Port: 7060},

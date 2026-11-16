@@ -641,7 +641,7 @@ func TestCreateOrExtendProfileWithCrypto_ExplicitChannelAndProfile(t *testing.T)
 	target := t.TempDir()
 	conf := &ConfigBlockParameters{
 		TargetPath:  target,
-		BaseProfile: "SampleFabricX",
+		BaseProfile: "SampleChaguar",
 		ChannelID:   "explicit-chan",
 		Organizations: []OrganizationParameters{
 			{
@@ -665,7 +665,7 @@ func TestCreateOrExtendProfileWithCrypto_ExplicitChannelAndProfile(t *testing.T)
 	require.NoError(t, err)
 	require.NotNil(t, profile)
 	require.Equal(t, "explicit-chan", conf.ChannelID)
-	require.Equal(t, "SampleFabricX", conf.BaseProfile)
+	require.Equal(t, "SampleChaguar", conf.BaseProfile)
 }
 
 func TestCreateOrExtendProfileWithCrypto_InvalidBaseProfile(t *testing.T) {
