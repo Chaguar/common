@@ -45,5 +45,4 @@ service SidecarService {
     // Event subscriptions. Previously Notifier.
     rpc OpenNotificationStream(stream NotificationRequest) returns (stream NotificationResponse);
     rpc StreamBlocks(StreamBlocksRequest) returns (stream BlockEvent);
-
 }
