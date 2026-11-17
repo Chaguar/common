@@ -59,6 +59,7 @@ type blockIndex struct {
 	db            *leveldbhelper.DBHandle
 }
 
+//nolint:unparam // Preserve the ported block-index constructor signature.
 func newBlockIndex(indexConfig *IndexConfig, db *leveldbhelper.DBHandle) (*blockIndex, error) {
 	indexItems := indexConfig.AttrsToIndex
 	logger.Debugf("newBlockIndex() - indexItems:[%s]", indexItems)
@@ -282,7 +283,7 @@ func (index *blockIndex) getTxIDVal(txID string) (*TxIDIndexValue, uint64, error
 	return val, blockNum, nil
 }
 
-func (index *blockIndex) getTXLocByBlockNumTranNum(blockNum uint64, tranNum uint64) (*fileLocPointer, error) {
+func (index *blockIndex) getTXLocByBlockNumTranNum(blockNum, tranNum uint64) (*fileLocPointer, error) {
 	if !index.isAttributeIndexed(IndexableAttrBlockNumTranNum) {
 		return nil, errors.New("<blockNumber, transactionNumber> tuple not maintained in index")
 	}
@@ -316,7 +317,7 @@ func (index *blockIndex) exportUniqueTxIDs(dir string, newHashFunc snapshot.NewH
 	var dataFile *snapshot.FileWriter
 	for dbItr.Next() {
 		if err := dbItr.Error(); err != nil {
-			return nil, errors.Wrap(err, "internal leveldb error while iterating for txids")
+			return nil, errors.Wrap(err, "internal pebble error while iterating for txids")
 		}
 		txID, err := retrieveTxID(dbItr.Key())
 		if err != nil {
@@ -475,7 +476,7 @@ func constructTxIDRangeScan(txID string) *rangeScan {
 	}
 }
 
-func constructBlockNumTranNumKey(blockNum uint64, txNum uint64) []byte {
+func constructBlockNumTranNumKey(blockNum, txNum uint64) []byte {
 	blkNumBytes := util.EncodeOrderPreservingVarUint64(blockNum)
 	tranNumBytes := util.EncodeOrderPreservingVarUint64(txNum)
 	key := append(blkNumBytes, tranNumBytes...)
@@ -510,7 +511,7 @@ type fileLocPointer struct {
 	locPointer
 }
 
-func newFileLocationPointer(fileSuffixNum int, beginningOffset int, relativeLP *locPointer) *fileLocPointer {
+func newFileLocationPointer(fileSuffixNum, beginningOffset int, relativeLP *locPointer) *fileLocPointer {
 	flp := &fileLocPointer{fileSuffixNum: fileSuffixNum}
 	flp.offset = beginningOffset + relativeLP.offset
 	flp.bytesLength = relativeLP.bytesLength

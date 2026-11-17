@@ -86,7 +86,7 @@ func (r *rollbackMgr) rollbackBlockIndex() error {
 	}
 
 	// we remove index associated with only 10 blocks at a time
-	// to avoid overuse of memory occupied by the leveldb batch.
+	// to avoid overuse of memory occupied by the pebble batch.
 	// If we assume a block size of 2000 transactions and 4 indices
 	// per transaction and 2 index per block, the total number of
 	// index keys to be added in the batch would be 80020. Even if a
@@ -146,7 +146,10 @@ func (r *rollbackMgr) deleteIndexEntriesRange(startBlkNum, endBlkNum uint64) err
 	return r.indexStore.db.WriteBatch(r.reusableBatch, true)
 }
 
-func addIndexEntriesToBeDeleted(batch *leveldbhelper.UpdateBatch, blockInfo *serializedBlockInfo, indexStore *blockIndex) error {
+//nolint:unparam // Preserve the ported rollback helper signature.
+func addIndexEntriesToBeDeleted(
+	batch *leveldbhelper.UpdateBatch, blockInfo *serializedBlockInfo, indexStore *blockIndex,
+) error {
 	if indexStore.isAttributeIndexed(IndexableAttrBlockHash) {
 		batch.Delete(constructBlockHashKey(protoutil.BlockHeaderHash(blockInfo.blockHeader)))
 	}

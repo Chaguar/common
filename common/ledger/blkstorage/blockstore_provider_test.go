@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/pebble/v2"
+	"github.com/hyperledger/fabric-lib-go/common/metrics/disabled"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/hyperledger/fabric-protos-go-apiv2/peer"
 	"github.com/stretchr/testify/require"
@@ -246,7 +248,7 @@ func TestDrop(t *testing.T) {
 
 	// negative test
 	provider.Close()
-	require.EqualError(t, provider.Drop("ledger2"), "internal leveldb error while obtaining db iterator: leveldb: closed")
+	require.EqualError(t, provider.Drop("ledger2"), "internal pebble error while obtaining db iterator: pebble: closed")
 }
 
 func TestBlocksItrContextCancel(t *testing.T) {
@@ -287,6 +289,44 @@ func TestBlocksItrContextCancel(t *testing.T) {
 
 	require.Nil(t, result)
 	require.ErrorIs(t, nextErr, context.Canceled)
+}
+
+func TestBlockStorePebbleReopen(t *testing.T) {
+	t.Parallel()
+
+	conf := NewConf(t.TempDir(), 0)
+	indexConfig := &IndexConfig{AttrsToIndex: attrsToIndex}
+	provider, err := NewProvider(conf, indexConfig, &disabled.Provider{})
+	require.NoError(t, err)
+	store, err := provider.Open("ledger")
+	require.NoError(t, err)
+
+	blocks := testutil.ConstructTestBlocks(t, 2)
+	require.NoError(t, store.AddBlock(blocks[0]))
+
+	store.Shutdown()
+	provider.Close()
+
+	// Read the persisted index with Pebble, not the blockstore wrapper.
+	db, err := pebble.Open(conf.getIndexDir(), &pebble.Options{ErrorIfNotExists: true})
+	require.NoError(t, err)
+	value, closer, err := db.Get([]byte("_\x00f"))
+	require.NoError(t, err)
+	require.Equal(t, dataFormatVersion(indexConfig), string(value))
+	require.NoError(t, closer.Close())
+	require.NoError(t, db.Close())
+
+	provider, err = NewProvider(conf, indexConfig, &disabled.Provider{})
+	require.NoError(t, err)
+	t.Cleanup(provider.Close)
+	store, err = provider.Open("ledger")
+	require.NoError(t, err)
+	t.Cleanup(store.Shutdown)
+
+	checkBlocks(t, blocks[:1], store)
+
+	require.NoError(t, store.AddBlock(blocks[1]))
+	checkBlocks(t, blocks, store)
 }
 
 func constructLedgerid(id int) string {

@@ -30,6 +30,13 @@ This modifies Fabric's config block:
 - hyperledger/fabric/common/configtx
 - hyperledger/fabric/common/policies
 
+### Block storage
+
+`common/ledger/blkstorage` stores block bytes in files and indexes and metadata in
+[Pebble](https://github.com/cockroachdb/pebble), replacing Fabric's goleveldb backend.
+Block-file and index-key encodings are unchanged. Existing goleveldb index directories
+are unsupported; no migration is provided for this unreleased product.
+
 ### Tools
 - hyperledger/fabric/cmd/configtxgen
 - hyperledger/fabric/cmd/configtxlator

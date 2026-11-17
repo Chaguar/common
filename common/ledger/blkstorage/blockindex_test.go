@@ -377,11 +377,11 @@ func TestExportUniqueTxIDsErrorCases(t *testing.T) {
 	require.EqualError(t, err, "invalid txIDKey {74}: number of consumed bytes from DecodeVarint is invalid, expected 1, but got 0")
 	os.RemoveAll(testSnapshotDir)
 
-	// error while reading from leveldb
+	// error while reading from pebble
 	require.NoError(t, os.MkdirAll(testSnapshotDir, 0o700))
 	env.provider.leveldbProvider.Close()
 	_, err = index.exportUniqueTxIDs(testSnapshotDir, testNewHashFunc)
-	require.EqualError(t, err, "internal leveldb error while obtaining db iterator: leveldb: closed")
+	require.EqualError(t, err, "internal pebble error while obtaining db iterator: pebble: closed")
 	os.RemoveAll(testSnapshotDir)
 }
 

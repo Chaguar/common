@@ -92,7 +92,10 @@ At start up a new manager:
 			-- If index and file system are not in sync, syncs index from the FS
 	  *)  Updates blockchain info used by the APIs
 */
-func newBlockfileMgr(id string, conf *Conf, indexConfig *IndexConfig, indexStore *leveldbhelper.DBHandle) (*blockfileMgr, error) {
+//nolint:gocognit // Preserve the ported block-file initialization flow.
+func newBlockfileMgr(
+	id string, conf *Conf, indexConfig *IndexConfig, indexStore *leveldbhelper.DBHandle,
+) (*blockfileMgr, error) {
 	logger.Debugf("newBlockfileMgr() initializing file-based block storage for ledger: %s ", id)
 	rootDir := conf.getLedgerBlockDir(id)
 	_, err := fileutil.CreateDirIfMissing(rootDir)
@@ -278,7 +281,7 @@ func (mgr *blockfileMgr) moveToNextFile() {
 	if err := mgr.currentFileWriter.close(); err != nil {
 		logger.Warn("failed to close the file chunk [%d]", mgr.blockfilesInfo.latestFileNumber)
 	}
-	// A sync write to LevelDB ensures all prior non-synced index entries
+	// A sync write to Pebble ensures all prior non-synced index entries
 	// (from addBlockNoSync) are also persisted.
 	if err := mgr.saveBlkfilesInfo(blkfilesInfo, true); err != nil {
 		panic(fmt.Sprintf("Could not save next block file info to db: %s", err))

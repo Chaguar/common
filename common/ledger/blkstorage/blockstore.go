@@ -54,7 +54,7 @@ func (store *BlockStore) AddBlock(block *common.Block) error {
 	return result
 }
 
-// AddBlockNoSync adds a new block without fsyncing the block file or index stored in the leveldb.
+// AddBlockNoSync adds a new block without fsyncing the block file or index stored in the pebble.
 // The caller must call Flush after writing a batch of blocks to ensure persistence.
 func (store *BlockStore) AddBlockNoSync(block *common.Block) error {
 	startBlockCommit := time.Now()
@@ -66,7 +66,7 @@ func (store *BlockStore) AddBlockNoSync(block *common.Block) error {
 	return result
 }
 
-// Flush syncs the block file and writes to leveldb to disk.
+// Flush syncs the block file and all pending Pebble index writes to disk.
 func (store *BlockStore) Flush() error {
 	return store.fileMgr.flush()
 }
@@ -102,7 +102,7 @@ func (store *BlockStore) RetrieveTxByID(txID string) (*common.Envelope, error) {
 }
 
 // RetrieveTxByBlockNumTranNum returns a transaction for the given <blockNum, tranNum>
-func (store *BlockStore) RetrieveTxByBlockNumTranNum(blockNum uint64, tranNum uint64) (*common.Envelope, error) {
+func (store *BlockStore) RetrieveTxByBlockNumTranNum(blockNum, tranNum uint64) (*common.Envelope, error) {
 	return store.fileMgr.retrieveTransactionByBlockNumTranNum(blockNum, tranNum)
 }
 

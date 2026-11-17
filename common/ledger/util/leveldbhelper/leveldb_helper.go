@@ -7,16 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 package leveldbhelper
 
 import (
+	"bytes"
 	"fmt"
-	"sync"
-	"syscall"
+	stdsync "sync"
 
+	"github.com/cockroachdb/errors"
+	"github.com/cockroachdb/pebble/v2"
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
-	"github.com/pkg/errors"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/iterator"
-	"github.com/syndtr/goleveldb/leveldb/opt"
-	goleveldbutil "github.com/syndtr/goleveldb/leveldb/util"
 
 	"github.com/Chaguar/common/tools/fileutil"
 )
@@ -30,156 +27,219 @@ const (
 	opened
 )
 
-// DB - a wrapper on an actual store
+// DB - a wrapper on an actual store.
 type DB struct {
 	conf    *Conf
-	db      *leveldb.DB
+	db      *pebble.DB
 	dbState dbState
-	mutex   sync.RWMutex
+	mutex   stdsync.RWMutex
 
-	readOpts        *opt.ReadOptions
-	writeOptsNoSync *opt.WriteOptions
-	writeOptsSync   *opt.WriteOptions
+	writeOptsNoSync *pebble.WriteOptions
+	writeOptsSync   *pebble.WriteOptions
 }
 
-// CreateDB constructs a `DB`
+// CreateDB constructs a DB.
 func CreateDB(conf *Conf) *DB {
-	readOpts := &opt.ReadOptions{}
-	writeOptsNoSync := &opt.WriteOptions{}
-	writeOptsSync := &opt.WriteOptions{}
+	writeOptsNoSync := &pebble.WriteOptions{}
+	writeOptsSync := &pebble.WriteOptions{}
 	writeOptsSync.Sync = true
 
 	return &DB{
 		conf:            conf,
 		dbState:         closed,
-		readOpts:        readOpts,
 		writeOptsNoSync: writeOptsNoSync,
 		writeOptsSync:   writeOptsSync,
 	}
 }
 
-// Open opens the underlying db
-func (dbInst *DB) Open() {
+// Open opens the underlying db.
+func (dbInst *DB) Open() error {
 	dbInst.mutex.Lock()
 	defer dbInst.mutex.Unlock()
+
 	if dbInst.dbState == opened {
-		return
+		return nil
 	}
-	dbOpts := &opt.Options{}
+
+	dbOpts := &pebble.Options{}
 	dbPath := dbInst.conf.DBPath
 	var err error
 	var dirEmpty bool
 	if dirEmpty, err = fileutil.CreateDirIfMissing(dbPath); err != nil {
-		panic(fmt.Sprintf("Error creating dir if missing: %s", err))
+		return errors.Wrap(err, "error creating database directory")
 	}
-	dbOpts.ErrorIfMissing = !dirEmpty
-	if dbInst.db, err = leveldb.OpenFile(dbPath, dbOpts); err != nil {
-		panic(fmt.Sprintf("Error opening leveldb: %s", err))
+
+	dbOpts.ErrorIfNotExists = !dirEmpty
+	if dbInst.db, err = pebble.Open(dbPath, dbOpts); err != nil {
+		return errors.Wrap(err, "error opening pebble")
 	}
+
 	dbInst.dbState = opened
+	return nil
 }
 
-// IsEmpty returns whether or not a database is empty
+// IsEmpty returns whether or not a database is empty.
 func (dbInst *DB) IsEmpty() (bool, error) {
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
-	itr := dbInst.db.NewIterator(&goleveldbutil.Range{}, dbInst.readOpts)
+
+	if dbInst.dbState == closed {
+		return false, errors.Wrapf(pebble.ErrClosed,
+			"error checking whether pebble at [%s] is empty", dbInst.conf.DBPath)
+	}
+
+	iter, err := dbInst.db.NewIter(&pebble.IterOptions{})
+	itr := &DBIterator{itr: iter, err: errors.WithStack(err), beforeFirst: true}
 	defer itr.Release()
+
 	hasItems := itr.Next()
-	return !hasItems,
-		errors.Wrapf(itr.Error(), "error while trying to see if the leveldb at path [%s] is empty", dbInst.conf.DBPath)
+	if err := itr.Error(); err != nil {
+		return false, fmt.Errorf("error checking whether pebble at [%s] is empty: %w", dbInst.conf.DBPath, err)
+	}
+
+	return !hasItems, nil
 }
 
-// Close closes the underlying db
+// Close closes the underlying db.
 func (dbInst *DB) Close() {
 	dbInst.mutex.Lock()
 	defer dbInst.mutex.Unlock()
+
 	if dbInst.dbState == closed {
 		return
 	}
 	if err := dbInst.db.Close(); err != nil {
-		logger.Errorf("Error closing leveldb: %s", err)
+		logger.Errorf("Error closing pebble: %s", err)
 	}
+
 	dbInst.dbState = closed
 }
 
-// Get returns the value for the given key
+// Get returns the value for the given key.
 func (dbInst *DB) Get(key []byte) ([]byte, error) {
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
-	value, err := dbInst.db.Get(key, dbInst.readOpts)
-	if err == leveldb.ErrNotFound {
-		value = nil
-		err = nil
+
+	if dbInst.dbState == closed {
+		return nil, errors.Wrap(pebble.ErrClosed, "error retrieving pebble key")
+	}
+
+	value, closer, err := dbInst.db.Get(key)
+	if errors.Is(err, pebble.ErrNotFound) {
+		return nil, nil
 	}
 	if err != nil {
-		logger.Errorf("Error retrieving leveldb key [%#v]: %s", key, err)
-		return nil, errors.Wrapf(err, "error retrieving leveldb key [%#v]", key)
+		return nil, errors.Wrapf(err, "error retrieving pebble key [%#v]", key)
 	}
+
+	// Pebble owns the returned buffer until closer.Close.
+	value = bytes.Clone(value)
+	if err := closer.Close(); err != nil {
+		return nil, errors.Wrap(err, "error releasing pebble value")
+	}
+
 	return value, nil
 }
 
-// Put saves the key/value
-func (dbInst *DB) Put(key []byte, value []byte, sync bool) error {
+// Put saves the key/value.
+func (dbInst *DB) Put(key, value []byte, sync bool) error { //nolint:revive // Sync controls durability.
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
+
+	if dbInst.dbState == closed {
+		return errors.Wrap(pebble.ErrClosed, "error writing pebble key")
+	}
+
 	wo := dbInst.writeOptsNoSync
 	if sync {
 		wo = dbInst.writeOptsSync
 	}
-	err := dbInst.db.Put(key, value, wo)
+
+	err := dbInst.db.Set(key, value, wo)
 	if err != nil {
-		logger.Errorf("Error writing leveldb key [%#v]", key)
-		return errors.Wrapf(err, "error writing leveldb key [%#v]", key)
+		return errors.Wrapf(err, "error writing pebble key [%#v]", key)
 	}
+
 	return nil
 }
 
-// Delete deletes the given key
-func (dbInst *DB) Delete(key []byte, sync bool) error {
+// Delete deletes the given key.
+func (dbInst *DB) Delete(key []byte, sync bool) error { //nolint:revive // Sync controls durability.
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
+
+	if dbInst.dbState == closed {
+		return errors.Wrap(pebble.ErrClosed, "error deleting pebble key")
+	}
+
 	wo := dbInst.writeOptsNoSync
 	if sync {
 		wo = dbInst.writeOptsSync
 	}
+
 	err := dbInst.db.Delete(key, wo)
 	if err != nil {
-		logger.Errorf("Error deleting leveldb key [%#v]", key)
-		return errors.Wrapf(err, "error deleting leveldb key [%#v]", key)
+		return errors.Wrapf(err, "error deleting pebble key [%#v]", key)
 	}
+
 	return nil
 }
 
 // GetIterator returns an iterator over key-value store. The iterator should be released after the use.
-// The resultset contains all the keys that are present in the db between the startKey (inclusive) and the endKey (exclusive).
-// A nil startKey represents the first available key and a nil endKey represent a logical key after the last available key
-func (dbInst *DB) GetIterator(startKey []byte, endKey []byte) iterator.Iterator {
+// The resultset contains keys between startKey (inclusive) and endKey (exclusive).
+// A nil startKey represents the first available key and a nil endKey represents a logical key
+// after the last available key.
+func (dbInst *DB) GetIterator(startKey, endKey []byte) *DBIterator {
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
-	return dbInst.db.NewIterator(&goleveldbutil.Range{Start: startKey, Limit: endKey}, dbInst.readOpts)
+
+	if dbInst.dbState == closed {
+		return &DBIterator{err: errors.WithStack(pebble.ErrClosed)}
+	}
+
+	itr, err := dbInst.db.NewIter(&pebble.IterOptions{LowerBound: startKey, UpperBound: endKey})
+	return &DBIterator{itr: itr, err: errors.WithStack(err), beforeFirst: true}
 }
 
-// WriteBatch writes a batch
-func (dbInst *DB) WriteBatch(batch *leveldb.Batch, sync bool) error {
+// WriteBatch writes a batch without consuming it.
+func (dbInst *DB) WriteBatch(batch *pebble.Batch, sync bool) error { //nolint:revive // Sync controls durability.
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
+
+	if dbInst.dbState == closed {
+		return errors.Wrap(pebble.ErrClosed, "error writing batch to pebble")
+	}
+
 	wo := dbInst.writeOptsNoSync
 	if sync {
 		wo = dbInst.writeOptsSync
 	}
-	if err := dbInst.db.Write(batch, wo); err != nil {
-		return errors.Wrap(err, "error writing batch to leveldb")
+
+	// Commit a private batch so callers can reuse or reset their update batch.
+	pending := dbInst.db.NewBatch()
+	defer func() {
+		if err := pending.Close(); err != nil {
+			logger.Errorf("Error closing pebble batch: %s", err)
+		}
+	}()
+
+	if err := pending.Apply(batch, nil); err != nil {
+		return errors.Wrap(err, "error preparing batch for pebble")
 	}
+
+	if err := pending.Commit(wo); err != nil {
+		return errors.Wrap(err, "error writing batch to pebble")
+	}
+
 	return nil
 }
 
-// FileLock encapsulate the DB that holds the file lock.
-// As the FileLock to be used by a single process/goroutine,
+// FileLock encapsulates the DB that holds the file lock.
+// As the FileLock is to be used by a single process/goroutine,
 // there is no need for the semaphore to synchronize the
 // FileLock usage.
 type FileLock struct {
-	db       *leveldb.DB
+	db       *pebble.DB
 	filePath string
 }
 
@@ -190,49 +250,40 @@ func NewFileLock(filePath string) *FileLock {
 	}
 }
 
-// Lock acquire a file lock. We achieve this by opening
-// a db for the given filePath. Internally, leveldb acquires a
+// Lock acquires a file lock. We achieve this by opening
+// a db for the given filePath. Internally, Pebble acquires a
 // file lock while opening a db. If the db is opened again by the same or
-// another process, error would be returned. When the db is closed
-// or the owner process dies, the lock would be released and hence
-// the other process can open the db. We exploit this leveldb
-// functionality to acquire and release file lock as the leveldb
-// supports this for Windows, Solaris, and Unix.
+// another process, an error is returned. When the db is closed
+// or the owner process dies, the lock is released and hence
+// the other process can open the db.
 func (f *FileLock) Lock() error {
-	dbOpts := &opt.Options{}
-	var err error
-	var dirEmpty bool
-	if dirEmpty, err = fileutil.CreateDirIfMissing(f.filePath); err != nil {
-		panic(fmt.Sprintf("Error creating dir if missing: %s", err))
+	if f.db != nil {
+		return errors.Newf("lock is already acquired on file %s", f.filePath)
 	}
-	dbOpts.ErrorIfMissing = !dirEmpty
-	db, err := leveldb.OpenFile(f.filePath, dbOpts)
-	if err != nil && err == syscall.EAGAIN {
-		return errors.Errorf("lock is already acquired on file %s", f.filePath)
-	}
+	db, err := pebble.Open(f.filePath, nil)
 	if err != nil {
-		panic(fmt.Sprintf("Error acquiring lock on file %s: %s", f.filePath, err))
+		return errors.Wrapf(err, "error acquiring lock on file %s", f.filePath)
 	}
 
-	// only mutate the lock db reference AFTER validating that the lock was held.
+	// Only mutate the lock db reference AFTER validating that the lock was held.
 	f.db = db
 
 	return nil
 }
 
-// Determine if the lock is currently held open.
+// IsLocked determines if the lock is currently held open.
 func (f *FileLock) IsLocked() bool {
 	return f.db != nil
 }
 
 // Unlock releases a previously acquired lock. We achieve this by closing
-// the previously opened db. FileUnlock can be called multiple times.
+// the previously opened db. Unlock can be called multiple times.
 func (f *FileLock) Unlock() {
 	if f.db == nil {
 		return
 	}
 	if err := f.db.Close(); err != nil {
-		logger.Warningf("unable to release the lock on file %s: %s", f.filePath, err)
+		logger.Warnf("Unable to release lock on file %s: %s", f.filePath, err)
 		return
 	}
 	f.db = nil
