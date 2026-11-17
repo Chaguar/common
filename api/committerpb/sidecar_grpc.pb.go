@@ -36,13 +36,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SidecarService_GetBlockchainInfo_FullMethodName        = "/committerpb.SidecarService/GetBlockchainInfo"
-	SidecarService_GetBlockByNumber_FullMethodName         = "/committerpb.SidecarService/GetBlockByNumber"
-	SidecarService_GetBlockByTxID_FullMethodName           = "/committerpb.SidecarService/GetBlockByTxID"
-	SidecarService_GetTxByID_FullMethodName                = "/committerpb.SidecarService/GetTxByID"
-	SidecarService_OpenNotificationStream_FullMethodName   = "/committerpb.SidecarService/OpenNotificationStream"
-	SidecarService_StreamBlocks_FullMethodName             = "/committerpb.SidecarService/StreamBlocks"
-	SidecarService_DeleteDBCloneForSnapshot_FullMethodName = "/committerpb.SidecarService/DeleteDBCloneForSnapshot"
+	SidecarService_GetBlockchainInfo_FullMethodName      = "/committerpb.SidecarService/GetBlockchainInfo"
+	SidecarService_GetBlockByNumber_FullMethodName       = "/committerpb.SidecarService/GetBlockByNumber"
+	SidecarService_GetBlockByTxID_FullMethodName         = "/committerpb.SidecarService/GetBlockByTxID"
+	SidecarService_GetTxByID_FullMethodName              = "/committerpb.SidecarService/GetTxByID"
+	SidecarService_OpenNotificationStream_FullMethodName = "/committerpb.SidecarService/OpenNotificationStream"
+	SidecarService_StreamBlocks_FullMethodName           = "/committerpb.SidecarService/StreamBlocks"
 )
 
 // SidecarServiceClient is the client API for SidecarService service.
@@ -65,9 +64,6 @@ type SidecarServiceClient interface {
 	// Event subscriptions. Previously Notifier.
 	OpenNotificationStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[NotificationRequest, NotificationResponse], error)
 	StreamBlocks(ctx context.Context, in *StreamBlocksRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[BlockEvent], error)
-	// Snapshot-clone administration. The committer answers UNIMPLEMENTED until
-	// the clone-deletion pipeline lands.
-	DeleteDBCloneForSnapshot(ctx context.Context, in *DeleteDBCloneForSnapshotRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type sidecarServiceClient struct {
@@ -150,16 +146,6 @@ func (c *sidecarServiceClient) StreamBlocks(ctx context.Context, in *StreamBlock
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SidecarService_StreamBlocksClient = grpc.ServerStreamingClient[BlockEvent]
 
-func (c *sidecarServiceClient) DeleteDBCloneForSnapshot(ctx context.Context, in *DeleteDBCloneForSnapshotRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, SidecarService_DeleteDBCloneForSnapshot_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // SidecarServiceServer is the server API for SidecarService service.
 // All implementations must embed UnimplementedSidecarServiceServer
 // for forward compatibility.
@@ -180,9 +166,6 @@ type SidecarServiceServer interface {
 	// Event subscriptions. Previously Notifier.
 	OpenNotificationStream(grpc.BidiStreamingServer[NotificationRequest, NotificationResponse]) error
 	StreamBlocks(*StreamBlocksRequest, grpc.ServerStreamingServer[BlockEvent]) error
-	// Snapshot-clone administration. The committer answers UNIMPLEMENTED until
-	// the clone-deletion pipeline lands.
-	DeleteDBCloneForSnapshot(context.Context, *DeleteDBCloneForSnapshotRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSidecarServiceServer()
 }
 
@@ -210,9 +193,6 @@ func (UnimplementedSidecarServiceServer) OpenNotificationStream(grpc.BidiStreami
 }
 func (UnimplementedSidecarServiceServer) StreamBlocks(*StreamBlocksRequest, grpc.ServerStreamingServer[BlockEvent]) error {
 	return status.Error(codes.Unimplemented, "method StreamBlocks not implemented")
-}
-func (UnimplementedSidecarServiceServer) DeleteDBCloneForSnapshot(context.Context, *DeleteDBCloneForSnapshotRequest) (*emptypb.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeleteDBCloneForSnapshot not implemented")
 }
 func (UnimplementedSidecarServiceServer) mustEmbedUnimplementedSidecarServiceServer() {}
 func (UnimplementedSidecarServiceServer) testEmbeddedByValue()                        {}
@@ -325,24 +305,6 @@ func _SidecarService_StreamBlocks_Handler(srv interface{}, stream grpc.ServerStr
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SidecarService_StreamBlocksServer = grpc.ServerStreamingServer[BlockEvent]
 
-func _SidecarService_DeleteDBCloneForSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDBCloneForSnapshotRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SidecarServiceServer).DeleteDBCloneForSnapshot(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SidecarService_DeleteDBCloneForSnapshot_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SidecarServiceServer).DeleteDBCloneForSnapshot(ctx, req.(*DeleteDBCloneForSnapshotRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // SidecarService_ServiceDesc is the grpc.ServiceDesc for SidecarService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -365,10 +327,6 @@ var SidecarService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTxByID",
 			Handler:    _SidecarService_GetTxByID_Handler,
-		},
-		{
-			MethodName: "DeleteDBCloneForSnapshot",
-			Handler:    _SidecarService_DeleteDBCloneForSnapshot_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -45,14 +45,4 @@ service SidecarService {
     // Event subscriptions. Previously Notifier.
     rpc OpenNotificationStream(stream NotificationRequest) returns (stream NotificationResponse);
     rpc StreamBlocks(StreamBlocksRequest) returns (stream BlockEvent);
-
-    // Snapshot-clone administration. The committer answers UNIMPLEMENTED until
-    // the clone-deletion pipeline lands.
-    rpc DeleteDBCloneForSnapshot(DeleteDBCloneForSnapshotRequest) returns (google.protobuf.Empty);
-}
-
-// DeleteDBCloneForSnapshotRequest identifies the snapshot whose database clone is dropped.
-message DeleteDBCloneForSnapshotRequest {
-    // Transaction ID of the snapshot transaction, the _snapshot namespace row key.
-    string tx_id = 1;
 }
