@@ -51,7 +51,7 @@ const (
 //	  |<-----------------|                                   |
 //	  | RPC + token -------------------------------------->  |
 //	  |                  |<-- AuthorizeIdentity(token, rpc) -|
-//	  |                  |--- allowed, token_expires_at ---->|
+//	  |                  |--- allowed, token_expire_time --->|
 type AuthServiceClient interface {
 	// IssueNonce issues a single-use, short-lived nonce the client must embed in the SignatureHeader of
 	// the envelope it then presents to AuthenticateIdentity. It is the mandatory first step of
@@ -65,7 +65,7 @@ type AuthServiceClient interface {
 	// changes both take effect on an established stream.
 	//
 	// It is part of the client API too: a client can call it on its own token to check that the token is
-	// still accepted for a resource and when it expires (token_expires_at), so it renews the token before
+	// still accepted for a resource and when it expires (token_expire_time), so it renews the token before
 	// its RPCs start failing rather than after. The client passes its own TLS certificate hash, the one
 	// the token is bound to.
 	AuthorizeIdentity(ctx context.Context, in *AuthorizeIdentityRequest, opts ...grpc.CallOption) (*AuthorizeIdentityResponse, error)
@@ -130,7 +130,7 @@ func (c *authServiceClient) AuthorizeIdentity(ctx context.Context, in *Authorize
 //	  |<-----------------|                                   |
 //	  | RPC + token -------------------------------------->  |
 //	  |                  |<-- AuthorizeIdentity(token, rpc) -|
-//	  |                  |--- allowed, token_expires_at ---->|
+//	  |                  |--- allowed, token_expire_time --->|
 type AuthServiceServer interface {
 	// IssueNonce issues a single-use, short-lived nonce the client must embed in the SignatureHeader of
 	// the envelope it then presents to AuthenticateIdentity. It is the mandatory first step of
@@ -144,7 +144,7 @@ type AuthServiceServer interface {
 	// changes both take effect on an established stream.
 	//
 	// It is part of the client API too: a client can call it on its own token to check that the token is
-	// still accepted for a resource and when it expires (token_expires_at), so it renews the token before
+	// still accepted for a resource and when it expires (token_expire_time), so it renews the token before
 	// its RPCs start failing rather than after. The client passes its own TLS certificate hash, the one
 	// the token is bound to.
 	AuthorizeIdentity(context.Context, *AuthorizeIdentityRequest) (*AuthorizeIdentityResponse, error)

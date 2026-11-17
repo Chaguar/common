@@ -16,6 +16,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -31,10 +32,10 @@ const (
 type IssueNonceResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// nonce is the server-issued challenge the client places in its envelope's SignatureHeader.Nonce.
-	// It is valid for a single AuthenticateIdentity call and expires at expires_at.
+	// It is valid for a single AuthenticateIdentity call and expires at expire_time.
 	Nonce []byte `protobuf:"bytes,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	// expires_at is the nonce expiry in unix seconds.
-	ExpiresAt     int64 `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	// expire_time is the time the nonce expires.
+	ExpireTime    *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expire_time,json=expireTime,proto3" json:"expire_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -76,11 +77,11 @@ func (x *IssueNonceResponse) GetNonce() []byte {
 	return nil
 }
 
-func (x *IssueNonceResponse) GetExpiresAt() int64 {
+func (x *IssueNonceResponse) GetExpireTime() *timestamppb.Timestamp {
 	if x != nil {
-		return x.ExpiresAt
+		return x.ExpireTime
 	}
-	return 0
+	return nil
 }
 
 type AuthenticateIdentityRequest struct {
@@ -147,8 +148,8 @@ type AuthenticateIdentityResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// token is the issued cert-bound opaque token the client attaches to subsequent RPCs.
 	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	// expires_at is the token expiry in unix seconds.
-	ExpiresAt     int64 `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	// expire_time is the time the token expires.
+	ExpireTime    *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expire_time,json=expireTime,proto3" json:"expire_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -190,11 +191,11 @@ func (x *AuthenticateIdentityResponse) GetToken() string {
 	return ""
 }
 
-func (x *AuthenticateIdentityResponse) GetExpiresAt() int64 {
+func (x *AuthenticateIdentityResponse) GetExpireTime() *timestamppb.Timestamp {
 	if x != nil {
-		return x.ExpiresAt
+		return x.ExpireTime
 	}
-	return 0
+	return nil
 }
 
 type AuthorizeIdentityRequest struct {
@@ -266,11 +267,11 @@ func (x *AuthorizeIdentityRequest) GetTlsCertHash() []byte {
 // PermissionDenied for a scope or policy denial; Unavailable before the configuration is loaded).
 type AuthorizeIdentityResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// token_expires_at is the bound token's expiry in unix seconds. A resource server ends a stream at it,
+	// token_expire_time is the time the bound token expires. A resource server ends a stream at it,
 	// so an expired token cannot keep an established stream alive.
-	TokenExpiresAt int64 `protobuf:"varint,1,opt,name=token_expires_at,json=tokenExpiresAt,proto3" json:"token_expires_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	TokenExpireTime *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=token_expire_time,json=tokenExpireTime,proto3" json:"token_expire_time,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *AuthorizeIdentityResponse) Reset() {
@@ -303,35 +304,35 @@ func (*AuthorizeIdentityResponse) Descriptor() ([]byte, []int) {
 	return file_api_committerpb_auth_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *AuthorizeIdentityResponse) GetTokenExpiresAt() int64 {
+func (x *AuthorizeIdentityResponse) GetTokenExpireTime() *timestamppb.Timestamp {
 	if x != nil {
-		return x.TokenExpiresAt
+		return x.TokenExpireTime
 	}
-	return 0
+	return nil
 }
 
 var File_api_committerpb_auth_proto protoreflect.FileDescriptor
 
 const file_api_committerpb_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapi/committerpb/auth.proto\x12\vcommitterpb\x1a\x1bgoogle/protobuf/empty.proto\x1a\x13common/common.proto\"I\n" +
+	"\x1aapi/committerpb/auth.proto\x12\vcommitterpb\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x13common/common.proto\"g\n" +
 	"\x12IssueNonceResponse\x12\x14\n" +
-	"\x05nonce\x18\x01 \x01(\fR\x05nonce\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"\x81\x01\n" +
+	"\x05nonce\x18\x01 \x01(\fR\x05nonce\x12;\n" +
+	"\vexpire_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"expireTime\"\x81\x01\n" +
 	"\x1bAuthenticateIdentityRequest\x129\n" +
 	"\x0fsigned_envelope\x18\x01 \x01(\v2\x10.common.EnvelopeR\x0esignedEnvelope\x12'\n" +
-	"\x0frequested_scope\x18\x02 \x03(\tR\x0erequestedScope\"S\n" +
+	"\x0frequested_scope\x18\x02 \x03(\tR\x0erequestedScope\"q\n" +
 	"\x1cAuthenticateIdentityResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"p\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12;\n" +
+	"\vexpire_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"expireTime\"p\n" +
 	"\x18AuthorizeIdentityRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1a\n" +
 	"\bresource\x18\x02 \x01(\tR\bresource\x12\"\n" +
-	"\rtls_cert_hash\x18\x03 \x01(\fR\vtlsCertHash\"E\n" +
-	"\x19AuthorizeIdentityResponse\x12(\n" +
-	"\x10token_expires_at\x18\x01 \x01(\x03R\x0etokenExpiresAt2\xa5\x02\n" +
+	"\rtls_cert_hash\x18\x03 \x01(\fR\vtlsCertHash\"c\n" +
+	"\x19AuthorizeIdentityResponse\x12F\n" +
+	"\x11token_expire_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x0ftokenExpireTime2\xa5\x02\n" +
 	"\vAuthService\x12E\n" +
 	"\n" +
 	"IssueNonce\x12\x16.google.protobuf.Empty\x1a\x1f.committerpb.IssueNonceResponse\x12k\n" +
@@ -357,22 +358,26 @@ var file_api_committerpb_auth_proto_goTypes = []any{
 	(*AuthenticateIdentityResponse)(nil), // 2: committerpb.AuthenticateIdentityResponse
 	(*AuthorizeIdentityRequest)(nil),     // 3: committerpb.AuthorizeIdentityRequest
 	(*AuthorizeIdentityResponse)(nil),    // 4: committerpb.AuthorizeIdentityResponse
-	(*common.Envelope)(nil),              // 5: common.Envelope
-	(*emptypb.Empty)(nil),                // 6: google.protobuf.Empty
+	(*timestamppb.Timestamp)(nil),        // 5: google.protobuf.Timestamp
+	(*common.Envelope)(nil),              // 6: common.Envelope
+	(*emptypb.Empty)(nil),                // 7: google.protobuf.Empty
 }
 var file_api_committerpb_auth_proto_depIdxs = []int32{
-	5, // 0: committerpb.AuthenticateIdentityRequest.signed_envelope:type_name -> common.Envelope
-	6, // 1: committerpb.AuthService.IssueNonce:input_type -> google.protobuf.Empty
-	1, // 2: committerpb.AuthService.AuthenticateIdentity:input_type -> committerpb.AuthenticateIdentityRequest
-	3, // 3: committerpb.AuthService.AuthorizeIdentity:input_type -> committerpb.AuthorizeIdentityRequest
-	0, // 4: committerpb.AuthService.IssueNonce:output_type -> committerpb.IssueNonceResponse
-	2, // 5: committerpb.AuthService.AuthenticateIdentity:output_type -> committerpb.AuthenticateIdentityResponse
-	4, // 6: committerpb.AuthService.AuthorizeIdentity:output_type -> committerpb.AuthorizeIdentityResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 0: committerpb.IssueNonceResponse.expire_time:type_name -> google.protobuf.Timestamp
+	6, // 1: committerpb.AuthenticateIdentityRequest.signed_envelope:type_name -> common.Envelope
+	5, // 2: committerpb.AuthenticateIdentityResponse.expire_time:type_name -> google.protobuf.Timestamp
+	5, // 3: committerpb.AuthorizeIdentityResponse.token_expire_time:type_name -> google.protobuf.Timestamp
+	7, // 4: committerpb.AuthService.IssueNonce:input_type -> google.protobuf.Empty
+	1, // 5: committerpb.AuthService.AuthenticateIdentity:input_type -> committerpb.AuthenticateIdentityRequest
+	3, // 6: committerpb.AuthService.AuthorizeIdentity:input_type -> committerpb.AuthorizeIdentityRequest
+	0, // 7: committerpb.AuthService.IssueNonce:output_type -> committerpb.IssueNonceResponse
+	2, // 8: committerpb.AuthService.AuthenticateIdentity:output_type -> committerpb.AuthenticateIdentityResponse
+	4, // 9: committerpb.AuthService.AuthorizeIdentity:output_type -> committerpb.AuthorizeIdentityResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_api_committerpb_auth_proto_init() }
