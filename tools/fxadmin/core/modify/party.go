@@ -19,11 +19,11 @@ import (
 	"go.yaml.in/yaml/v3"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/protolator/protoext/ordererext"
 )
 
 // Keys of a party definition: the party's entry of the shared config, the

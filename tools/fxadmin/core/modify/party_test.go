@@ -22,19 +22,19 @@ import (
 	"go.yaml.in/yaml/v3"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/hyperledger/fabric-x-common/api/msppb"
-	"github.com/hyperledger/fabric-x-common/api/ordererpb"
-	"github.com/hyperledger/fabric-x-common/api/types"
-	"github.com/hyperledger/fabric-x-common/common/channelconfig"
-	"github.com/hyperledger/fabric-x-common/common/policies"
-	"github.com/hyperledger/fabric-x-common/protolator"
-	"github.com/hyperledger/fabric-x-common/protolator/protoext/ordererext"
-	"github.com/hyperledger/fabric-x-common/protoutil"
-	"github.com/hyperledger/fabric-x-common/tools/configtxgen"
-	"github.com/hyperledger/fabric-x-common/tools/cryptogen"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/helpers"
-	"github.com/hyperledger/fabric-x-common/tools/fxadmin/core/modify"
-	"github.com/hyperledger/fabric-x-common/utils/test"
+	"github.com/Chaguar/common/api/msppb"
+	"github.com/Chaguar/common/api/ordererpb"
+	"github.com/Chaguar/common/api/types"
+	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/common/policies"
+	"github.com/Chaguar/common/protolator"
+	"github.com/Chaguar/common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/protoutil"
+	"github.com/Chaguar/common/tools/configtxgen"
+	"github.com/Chaguar/common/tools/cryptogen"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
+	"github.com/Chaguar/common/tools/fxadmin/core/modify"
+	"github.com/Chaguar/common/utils/test"
 )
 
 const (
@@ -567,7 +567,7 @@ func newArmaConfigBlock(t *testing.T) []byte {
 	require.NoError(t, err)
 	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:  t.TempDir(),
-		BaseProfile: configtxgen.SampleFabricX,
+		BaseProfile: configtxgen.SampleChaguar,
 		ChannelID:   testChannelID,
 		Organizations: []cryptogen.OrganizationParameters{{
 			Name:             existingOrdererOrg,
@@ -599,7 +599,7 @@ func newJoiningParty(t *testing.T) (*ordererpb.PartyConfig, *cb.ConfigGroup) {
 	t.Helper()
 	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
 		TargetPath:  t.TempDir(),
-		BaseProfile: configtxgen.SampleFabricX,
+		BaseProfile: configtxgen.SampleChaguar,
 		ChannelID:   testChannelID,
 		Organizations: []cryptogen.OrganizationParameters{{
 			Name:   joiningOrdererOrg,
