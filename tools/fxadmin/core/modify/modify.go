@@ -65,12 +65,6 @@ func (*Handler) AppKnownCertsRemove(org string, certPaths []string, blockPath st
 	return ErrNotImplemented
 }
 
-// PartyRemove implements `fxadmin modify party remove`.
-func (*Handler) PartyRemove(partyID uint32, blockPath string) error {
-	logger.Debugf("modify party remove: partyID=%d block=%s (not implemented)", partyID, blockPath)
-	return ErrNotImplemented
-}
-
 // PartyCA implements `fxadmin modify party ca add|remove|set`.
 func (*Handler) PartyCA(ch change.CA) error {
 	logger.Debugf("modify party ca: %+v (not implemented)", ch)
