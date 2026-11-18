@@ -210,7 +210,8 @@ func TestTxIDExists(t *testing.T) {
 
 		env.provider.Close()
 		exists, err := blkStore.TxIDExists("random")
-		require.EqualError(t, err, "error while trying to check the presence of TXID [random]: internal leveldb error while obtaining db iterator: leveldb: closed")
+		require.EqualError(t, err, "error while trying to check the presence of TXID [random]: "+
+			"internal pebble error while obtaining db iterator: pebble: closed")
 		require.False(t, exists)
 	})
 }

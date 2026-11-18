@@ -9,9 +9,13 @@ package blkstorage
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/pebble/v2"
+	"github.com/hyperledger/fabric-lib-go/common/metrics/disabled"
 	"github.com/hyperledger/fabric-protos-go-apiv2/common"
 	"github.com/hyperledger/fabric-protos-go-apiv2/peer"
 	"github.com/stretchr/testify/require"
@@ -224,7 +228,7 @@ func TestDrop(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, exists)
 
-	empty, err := provider.leveldbProvider.GetDBHandle("ledger1").IsEmpty()
+	empty, err := provider.pebbleProvider.GetDBHandle("ledger1").IsEmpty()
 	require.NoError(t, err)
 	require.True(t, empty)
 
@@ -246,7 +250,7 @@ func TestDrop(t *testing.T) {
 
 	// negative test
 	provider.Close()
-	require.EqualError(t, provider.Drop("ledger2"), "internal leveldb error while obtaining db iterator: leveldb: closed")
+	require.EqualError(t, provider.Drop("ledger2"), "internal pebble error while obtaining db iterator: pebble: closed")
 }
 
 func TestBlocksItrContextCancel(t *testing.T) {
@@ -287,6 +291,75 @@ func TestBlocksItrContextCancel(t *testing.T) {
 
 	require.Nil(t, result)
 	require.ErrorIs(t, nextErr, context.Canceled)
+}
+
+func TestBlockStorePebbleReopen(t *testing.T) {
+	t.Parallel()
+
+	conf := NewConf(t.TempDir(), 0)
+	indexConfig := &IndexConfig{AttrsToIndex: attrsToIndex}
+	provider, err := NewProvider(conf, indexConfig, &disabled.Provider{})
+	require.NoError(t, err)
+	store, err := provider.Open("ledger")
+	require.NoError(t, err)
+
+	blocks := testutil.ConstructTestBlocks(t, 2)
+	require.NoError(t, store.AddBlock(blocks[0]))
+
+	store.Shutdown()
+	provider.Close()
+
+	// Read the persisted index with Pebble, not the blockstore wrapper.
+	db, err := pebble.Open(conf.getIndexDir(), &pebble.Options{ErrorIfNotExists: true})
+	require.NoError(t, err)
+	value, closer, err := db.Get([]byte("_\x00f"))
+	require.NoError(t, err)
+	require.Equal(t, dataFormatVersion(indexConfig), string(value))
+	require.NoError(t, closer.Close())
+	require.NoError(t, db.Close())
+
+	provider, err = NewProvider(conf, indexConfig, &disabled.Provider{})
+	require.NoError(t, err)
+	t.Cleanup(provider.Close)
+	store, err = provider.Open("ledger")
+	require.NoError(t, err)
+	t.Cleanup(store.Shutdown)
+
+	checkBlocks(t, blocks[:1], store)
+
+	require.NoError(t, store.AddBlock(blocks[1]))
+	checkBlocks(t, blocks, store)
+}
+
+func TestBlockStoreIndexMemTableSize(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name string
+		size uint64
+		want string
+	}{
+		{name: "default", want: "mem_table_size=67108864"},
+		{name: "smaller override", size: 16 << 20, want: "mem_table_size=16777216"},
+		{name: "larger override", size: 128 << 20, want: "mem_table_size=134217728"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			conf := NewConf(t.TempDir(), 0)
+			conf.IndexMemTableSize = tc.size
+			provider, err := NewProvider(conf, &IndexConfig{AttrsToIndex: attrsToIndex}, &disabled.Provider{})
+			require.NoError(t, err)
+			t.Cleanup(provider.Close)
+
+			files, err := filepath.Glob(filepath.Join(conf.getIndexDir(), "OPTIONS-*"))
+			require.NoError(t, err)
+			require.Len(t, files, 1)
+			options, err := os.ReadFile(files[0])
+			require.NoError(t, err)
+			require.Contains(t, string(options), tc.want)
+		})
+	}
 }
 
 func constructLedgerid(id int) string {

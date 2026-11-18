@@ -121,6 +121,7 @@ func TestResetBlockStore(t *testing.T) {
 	)
 
 	env = newTestEnv(t, NewConf(blockStoreRootDir, maxFileSie))
+	defer env.Cleanup()
 	provider = env.provider
 	store1, _ = provider.Open("ledger1")
 	store2, _ = provider.Open("ledger2")
@@ -136,6 +137,9 @@ func TestResetBlockStore(t *testing.T) {
 	)
 
 	// reset again to test load and clear preResetHeight for ledger2
+	store1.Shutdown()
+	store2.Shutdown()
+	provider.Close()
 	require.NoError(t, ResetBlockStore(blockStoreRootDir))
 	ledgerIDs = []string{"ledger2"}
 	h, err = LoadPreResetHeight(blockStoreRootDir, ledgerIDs)

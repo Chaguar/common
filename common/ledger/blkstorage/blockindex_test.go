@@ -53,7 +53,7 @@ func testBlockIndexSync(t *testing.T, numBlocks int, numBlocksToIndex int, syncB
 		blkfileMgrWrapper.addBlocks(blocks[:numBlocksToIndex])
 
 		// redirect index writes to some random place and add remaining blocks
-		blkfileMgr.index.db = env.provider.leveldbProvider.GetDBHandle("someRandomPlace")
+		blkfileMgr.index.db = env.provider.pebbleProvider.GetDBHandle("someRandomPlace")
 		blkfileMgrWrapper.addBlocks(blocks[numBlocksToIndex:])
 
 		// Plug-in back the original index store
@@ -377,11 +377,11 @@ func TestExportUniqueTxIDsErrorCases(t *testing.T) {
 	require.EqualError(t, err, "invalid txIDKey {74}: number of consumed bytes from DecodeVarint is invalid, expected 1, but got 0")
 	os.RemoveAll(testSnapshotDir)
 
-	// error while reading from leveldb
+	// error while reading from pebble
 	require.NoError(t, os.MkdirAll(testSnapshotDir, 0o700))
-	env.provider.leveldbProvider.Close()
+	env.provider.pebbleProvider.Close()
 	_, err = index.exportUniqueTxIDs(testSnapshotDir, testNewHashFunc)
-	require.EqualError(t, err, "internal leveldb error while obtaining db iterator: leveldb: closed")
+	require.EqualError(t, err, "internal pebble error while obtaining db iterator: pebble: closed")
 	os.RemoveAll(testSnapshotDir)
 }
 

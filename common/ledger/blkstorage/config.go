@@ -20,6 +20,10 @@ const (
 type Conf struct {
 	blockStorageDir  string
 	maxBlockfileSize int
+	// IndexMemTableSize is the steady-state index memtable size in bytes. Zero selects 64 MiB.
+	// It applies to the shared index DB, not each ledger. Queued memtables can use roughly twice
+	// this size before writes stop; cache and other allocations are additional.
+	IndexMemTableSize uint64
 }
 
 // NewConf constructs new `Conf`.
@@ -28,7 +32,7 @@ func NewConf(blockStorageDir string, maxBlockfileSize int) *Conf {
 	if maxBlockfileSize <= 0 {
 		maxBlockfileSize = defaultMaxBlockfileSize
 	}
-	return &Conf{blockStorageDir, maxBlockfileSize}
+	return &Conf{blockStorageDir: blockStorageDir, maxBlockfileSize: maxBlockfileSize}
 }
 
 func (conf *Conf) getIndexDir() string {

@@ -14,7 +14,7 @@ import (
 
 	"github.com/Chaguar/common/common/ledger"
 	"github.com/Chaguar/common/common/ledger/snapshot"
-	"github.com/Chaguar/common/common/ledger/util/leveldbhelper"
+	"github.com/Chaguar/common/common/ledger/util/pebblehelper"
 )
 
 // BlockStore - filesystem based implementation for `BlockStore`
@@ -27,7 +27,7 @@ type BlockStore struct {
 
 // newBlockStore constructs a `BlockStore`
 func newBlockStore(id string, conf *Conf, indexConfig *IndexConfig,
-	dbHandle *leveldbhelper.DBHandle, stats *stats,
+	dbHandle *pebblehelper.DBHandle, stats *stats,
 ) (*BlockStore, error) {
 	fileMgr, err := newBlockfileMgr(id, conf, indexConfig, dbHandle)
 	if err != nil {
@@ -54,7 +54,7 @@ func (store *BlockStore) AddBlock(block *common.Block) error {
 	return result
 }
 
-// AddBlockNoSync adds a new block without fsyncing the block file or index stored in the leveldb.
+// AddBlockNoSync adds a new block without fsyncing the block file or index stored in the pebble.
 // The caller must call Flush after writing a batch of blocks to ensure persistence.
 func (store *BlockStore) AddBlockNoSync(block *common.Block) error {
 	startBlockCommit := time.Now()
@@ -66,7 +66,7 @@ func (store *BlockStore) AddBlockNoSync(block *common.Block) error {
 	return result
 }
 
-// Flush syncs the block file and writes to leveldb to disk.
+// Flush syncs the block file and all pending Pebble index writes to disk.
 func (store *BlockStore) Flush() error {
 	return store.fileMgr.flush()
 }

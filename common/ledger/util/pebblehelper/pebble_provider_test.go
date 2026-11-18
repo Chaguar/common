@@ -4,28 +4,29 @@ Copyright IBM Corp. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package leveldbhelper
+package pebblehelper
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
+	"github.com/cockroachdb/pebble/v2"
 	"github.com/stretchr/testify/require"
-	"github.com/syndtr/goleveldb/leveldb"
 
 	"github.com/Chaguar/common/common/ledger/dataformat"
 )
 
-func TestMain(m *testing.M) {
-	os.Exit(m.Run())
-}
+const testFormat = "2.0"
 
 func TestDBBasicWriteAndReads(t *testing.T) {
+	t.Parallel()
 	testDBBasicWriteAndReads(t, "db1", "db2", "")
 }
 
+//nolint:paralleltest // Subtests share one provider; the final subtest closes it.
 func TestIterator(t *testing.T) {
+	t.Parallel()
+	testDBPath := t.TempDir()
 	env := newTestProviderEnv(t, testDBPath)
 	defer env.cleanup()
 	p := env.provider
@@ -156,12 +157,14 @@ func TestIterator(t *testing.T) {
 	t.Run("test-error-path", func(t *testing.T) {
 		env.provider.Close()
 		itr, err := db1.GetIterator(nil, nil)
-		require.EqualError(t, err, "internal leveldb error while obtaining db iterator: leveldb: closed")
+		require.EqualError(t, err, "internal pebble error while obtaining db iterator: pebble: closed")
 		require.Nil(t, itr)
 	})
 }
 
 func TestBatchedUpdates(t *testing.T) {
+	t.Parallel()
+	testDBPath := t.TempDir()
 	env := newTestProviderEnv(t, testDBPath)
 	defer env.cleanup()
 	p := env.provider
@@ -189,7 +192,7 @@ func TestBatchedUpdates(t *testing.T) {
 		require.Equal(t, "value1", string(val1))
 
 		val2, err2 := db.Get([]byte("key2"))
-		require.NoError(t, err2, "")
+		require.NoError(t, err2)
 		require.Nil(t, val2)
 
 		val3, _ := db.Get([]byte("key3"))
@@ -198,6 +201,8 @@ func TestBatchedUpdates(t *testing.T) {
 }
 
 func TestDrop(t *testing.T) {
+	t.Parallel()
+	testDBPath := t.TempDir()
 	env := newTestProviderEnv(t, testDBPath)
 	defer env.cleanup()
 	p := env.provider
@@ -286,10 +291,11 @@ func TestDrop(t *testing.T) {
 
 	// negative test
 	p.Close()
-	require.EqualError(t, db2.deleteAll(), "internal leveldb error while obtaining db iterator: leveldb: closed")
+	require.EqualError(t, db2.deleteAll(), "internal pebble error while obtaining db iterator: pebble: closed")
 }
 
 func TestFormatCheck(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		dataFormat     string
 		dataExists     bool
@@ -311,26 +317,26 @@ func TestFormatCheck(t *testing.T) {
 		{
 			dataFormat:     "",
 			dataExists:     false,
-			expectedFormat: "2.0",
+			expectedFormat: testFormat,
 			expectedErr:    nil,
 		},
 		{
 			dataFormat:     "",
 			dataExists:     true,
-			expectedFormat: "2.0",
-			expectedErr:    &dataformat.ErrFormatMismatch{Format: "", ExpectedFormat: "2.0"},
+			expectedFormat: testFormat,
+			expectedErr:    &dataformat.ErrFormatMismatch{Format: "", ExpectedFormat: testFormat},
 		},
 		{
-			dataFormat:     "2.0",
+			dataFormat:     testFormat,
 			dataExists:     true,
-			expectedFormat: "2.0",
+			expectedFormat: testFormat,
 			expectedErr:    nil,
 		},
 		{
-			dataFormat:     "2.0",
+			dataFormat:     testFormat,
 			dataExists:     true,
 			expectedFormat: "3.0",
-			expectedErr:    &dataformat.ErrFormatMismatch{Format: "2.0", ExpectedFormat: "3.0"},
+			expectedErr:    &dataformat.ErrFormatMismatch{Format: testFormat, ExpectedFormat: "3.0"},
 		},
 	}
 
@@ -338,12 +344,17 @@ func TestFormatCheck(t *testing.T) {
 		t.Run(
 			fmt.Sprintf("testCase %d", i),
 			func(t *testing.T) {
-				testFormatCheck(t, testCase.dataFormat, testCase.expectedFormat, testCase.dataExists, testCase.expectedErr)
+				t.Parallel()
+				testFormatCheck(
+					t, testCase.dataFormat, testCase.expectedFormat, testCase.dataExists, testCase.expectedErr,
+				)
 			})
 	}
 }
 
 func TestClose(t *testing.T) {
+	t.Parallel()
+	testDBPath := t.TempDir()
 	env := newTestProviderEnv(t, testDBPath)
 	defer env.cleanup()
 	p := env.provider
@@ -367,7 +378,10 @@ func TestClose(t *testing.T) {
 	require.Equal(t, map[string]*DBHandle{}, p.dbHandles)
 }
 
+//nolint:paralleltest // Subtests sequentially reuse setup variables.
 func TestIsEmpty(t *testing.T) {
+	t.Parallel()
+	testDBPath := t.TempDir()
 	var env *testDBProviderEnv
 	var db1, db2 *DBHandle
 
@@ -431,16 +445,19 @@ func TestIsEmpty(t *testing.T) {
 
 		env.provider.Close()
 		empty, err := db1.IsEmpty()
-		require.EqualError(t, err, "internal leveldb error while obtaining db iterator: leveldb: closed")
+		require.EqualError(t, err, "internal pebble error while obtaining db iterator: pebble: closed")
 		require.False(t, empty)
 
 		empty, err = db2.IsEmpty()
-		require.EqualError(t, err, "internal leveldb error while obtaining db iterator: leveldb: closed")
+		require.EqualError(t, err, "internal pebble error while obtaining db iterator: pebble: closed")
 		require.False(t, empty)
 	})
 }
 
+//nolint:paralleltest // Subtests sequentially reuse setup variables.
 func TestRetrieveDataFormatInfo(t *testing.T) {
+	t.Parallel()
+	testDBPath := t.TempDir()
 	var env *testDBProviderEnv
 	var provider *Provider
 	setup := func() {
@@ -508,9 +525,10 @@ func TestRetrieveDataFormatInfo(t *testing.T) {
 }
 
 func TestUpdateBatch(t *testing.T) {
+	t.Parallel()
 	b := &UpdateBatch{
-		dbName:       "mydb",
-		leveldbBatch: &leveldb.Batch{},
+		dbName:      "mydb",
+		pebbleBatch: &pebble.Batch{},
 	}
 
 	require.Equal(t, 0, b.Size())
@@ -549,11 +567,12 @@ func TestUpdateBatch(t *testing.T) {
 	require.Equal(t, 1, b.Len())
 }
 
-func testFormatCheck(t *testing.T, dataFormat, expectedFormat string, dataExists bool, expectedErr *dataformat.ErrFormatMismatch) {
-	require.NoError(t, os.RemoveAll(testDBPath))
-	defer func() {
-		require.NoError(t, os.RemoveAll(testDBPath))
-	}()
+//nolint:revive // Preserve the ported format-check fixture parameters.
+func testFormatCheck(
+	t *testing.T, dataFormat, expectedFormat string, dataExists bool, expectedErr *dataformat.ErrFormatMismatch,
+) {
+	t.Helper()
+	testDBPath := t.TempDir()
 
 	// setup test pre-conditions (create a db with dbformat)
 	p, err := NewProvider(&Conf{DBPath: testDBPath, ExpectedFormat: dataFormat})
@@ -569,17 +588,20 @@ func testFormatCheck(t *testing.T, dataFormat, expectedFormat string, dataExists
 	p.Close()
 	p, err = NewProvider(&Conf{DBPath: testDBPath, ExpectedFormat: expectedFormat})
 	if expectedErr != nil {
-		expectedErr.DBInfo = fmt.Sprintf("leveldb at [%s]", testDBPath)
-		require.Equal(t, err, expectedErr)
+		expectedErr.DBInfo = fmt.Sprintf("pebble at [%s]", testDBPath)
+		require.Equal(t, expectedErr, err)
 		return
 	}
 	require.NoError(t, err)
 	f, err = p.GetDataFormat()
 	require.NoError(t, err)
 	require.Equal(t, expectedFormat, f)
+	p.Close()
 }
 
 func testDBBasicWriteAndReads(t *testing.T, dbNames ...string) {
+	t.Helper()
+	testDBPath := t.TempDir()
 	env := newTestProviderEnv(t, testDBPath)
 	defer env.cleanup()
 	p := env.provider
@@ -594,38 +616,39 @@ func testDBBasicWriteAndReads(t *testing.T, dbNames ...string) {
 	for _, dbName := range dbNames {
 		db := p.GetDBHandle(dbName)
 		val, err := db.Get([]byte("key1"))
-		require.NoError(t, err, "")
+		require.NoError(t, err)
 		require.Equal(t, []byte("value1_"+dbName), val)
 
 		val, err = db.Get([]byte("key2"))
-		require.NoError(t, err, "")
+		require.NoError(t, err)
 		require.Equal(t, []byte("value2_"+dbName), val)
 
 		val, err = db.Get([]byte("key3"))
-		require.NoError(t, err, "")
+		require.NoError(t, err)
 		require.Equal(t, []byte("value3_"+dbName), val)
 	}
 
 	for _, dbName := range dbNames {
 		db := p.GetDBHandle(dbName)
-		require.NoError(t, db.Delete([]byte("key1"), false), "")
+		require.NoError(t, db.Delete([]byte("key1"), false))
 		val, err := db.Get([]byte("key1"))
-		require.NoError(t, err, "")
+		require.NoError(t, err)
 		require.Nil(t, val)
 
-		require.NoError(t, db.Delete([]byte("key2"), false), "")
+		require.NoError(t, db.Delete([]byte("key2"), false))
 		val, err = db.Get([]byte("key2"))
-		require.NoError(t, err, "")
+		require.NoError(t, err)
 		require.Nil(t, val)
 
-		require.NoError(t, db.Delete([]byte("key3"), false), "")
+		require.NoError(t, db.Delete([]byte("key3"), false))
 		val, err = db.Get([]byte("key3"))
-		require.NoError(t, err, "")
+		require.NoError(t, err)
 		require.Nil(t, val)
 	}
 }
 
-func checkItrResults(t *testing.T, itr *Iterator, expectedKeys []string, expectedValues []string) {
+func checkItrResults(t *testing.T, itr *Iterator, expectedKeys, expectedValues []string) {
+	t.Helper()
 	var actualKeys []string
 	var actualValues []string
 	for itr.Next(); itr.Valid(); itr.Next() {
@@ -634,14 +657,15 @@ func checkItrResults(t *testing.T, itr *Iterator, expectedKeys []string, expecte
 	}
 	require.Equal(t, expectedKeys, actualKeys)
 	require.Equal(t, expectedValues, actualValues)
-	require.Equal(t, false, itr.Next())
+	require.False(t, itr.Next())
 }
 
 func createTestKey(i int) string {
 	return fmt.Sprintf("key_%06d", i)
 }
 
-const padding100 = "_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789_"
+const padding100 = "_0123456789_0123456789_0123456789_0123456789_0123456789" +
+	"_0123456789_0123456789_0123456789_0123456789_0123456789_"
 
 func createTestLongKey(i int) string {
 	return fmt.Sprintf("key_%s_%10d", padding100, i)
@@ -651,7 +675,7 @@ func createTestValue(dbname string, i int) string {
 	return fmt.Sprintf("value_%s_%06d", dbname, i)
 }
 
-func createTestKeys(start int, end int) []string {
+func createTestKeys(start, end int) []string {
 	var keys []string
 	for i := start; i <= end; i++ {
 		keys = append(keys, createTestKey(i))
@@ -659,7 +683,7 @@ func createTestKeys(start int, end int) []string {
 	return keys
 }
 
-func createTestLongKeys(start int, end int) []string {
+func createTestLongKeys(start, end int) []string {
 	var keys []string
 	for i := start; i <= end; i++ {
 		keys = append(keys, createTestLongKey(i))
@@ -667,7 +691,7 @@ func createTestLongKeys(start int, end int) []string {
 	return keys
 }
 
-func createTestValues(dbname string, start int, end int) []string {
+func createTestValues(dbname string, start, end int) []string {
 	var values []string
 	for i := start; i <= end; i++ {
 		values = append(values, createTestValue(dbname, i))

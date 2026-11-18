@@ -19,7 +19,7 @@ import (
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/Chaguar/common/common/ledger/util/leveldbhelper"
+	"github.com/Chaguar/common/common/ledger/util/pebblehelper"
 	"github.com/Chaguar/common/protoutil"
 	"github.com/Chaguar/common/tools/fileutil"
 )
@@ -36,7 +36,7 @@ var blkMgrInfoKey = []byte("blkMgrInfo")
 type blockfileMgr struct {
 	rootDir                   string
 	conf                      *Conf
-	db                        *leveldbhelper.DBHandle
+	db                        *pebblehelper.DBHandle
 	index                     *blockIndex
 	blockfilesInfo            *blockfilesInfo
 	bootstrappingSnapshotInfo *BootstrappingSnapshotInfo
@@ -92,7 +92,10 @@ At start up a new manager:
 			-- If index and file system are not in sync, syncs index from the FS
 	  *)  Updates blockchain info used by the APIs
 */
-func newBlockfileMgr(id string, conf *Conf, indexConfig *IndexConfig, indexStore *leveldbhelper.DBHandle) (*blockfileMgr, error) {
+//nolint:gocognit // Ported from Fabric; keep upstream structure.
+func newBlockfileMgr(
+	id string, conf *Conf, indexConfig *IndexConfig, indexStore *pebblehelper.DBHandle,
+) (*blockfileMgr, error) {
 	logger.Debugf("newBlockfileMgr() initializing file-based block storage for ledger: %s ", id)
 	rootDir := conf.getLedgerBlockDir(id)
 	_, err := fileutil.CreateDirIfMissing(rootDir)
@@ -174,7 +177,7 @@ func bootstrapFromSnapshottedTxIDs(
 	snapshotDir string,
 	snapshotInfo *SnapshotInfo,
 	conf *Conf,
-	indexStore *leveldbhelper.DBHandle,
+	indexStore *pebblehelper.DBHandle,
 ) error {
 	rootDir := conf.getLedgerBlockDir(ledgerID)
 	isEmpty, err := fileutil.CreateDirIfMissing(rootDir)
@@ -278,7 +281,7 @@ func (mgr *blockfileMgr) moveToNextFile() {
 	if err := mgr.currentFileWriter.close(); err != nil {
 		logger.Warn("failed to close the file chunk [%d]", mgr.blockfilesInfo.latestFileNumber)
 	}
-	// A sync write to LevelDB ensures all prior non-synced index entries
+	// A sync write to Pebble ensures all prior non-synced index entries
 	// (from addBlockNoSync) are also persisted.
 	if err := mgr.saveBlkfilesInfo(blkfilesInfo, true); err != nil {
 		panic(fmt.Sprintf("Could not save next block file info to db: %s", err))

@@ -279,7 +279,9 @@ func TestImportFromSnapshot(t *testing.T) {
 			// redirect index writes to some random place and add two blocks and then set the original index back
 			blkfileMgr := bootstrappedBlockStore.fileMgr
 			originalIndexDB := blkfileMgr.index.db
-			bootstrappedBlockStore.fileMgr.index.db = env.provider.leveldbProvider.GetDBHandle(filepath.Join(testDir, "someRandomPlace"))
+			bootstrappedBlockStore.fileMgr.index.db = env.provider.pebbleProvider.GetDBHandle(
+				filepath.Join(testDir, "someRandomPlace"),
+			)
 			require.NoError(t, blkfileMgr.addBlock(block))
 			blkfileMgr.index.db = originalIndexDB
 
@@ -414,7 +416,7 @@ func TestBootstrapFromSnapshotErrorPaths(t *testing.T) {
 			env = newTestEnv(t, NewConf(testPath, 0))
 		}()
 		err := env.provider.ImportFromSnapshot(ledgerID, snapshotDir, snapshotInfo)
-		require.Contains(t, err.Error(), "error writing batch to leveldb")
+		require.Contains(t, err.Error(), "error writing batch to pebble")
 	})
 
 	t.Run("bootstrappedsnapshotInfo-file-corrupt", func(t *testing.T) {
