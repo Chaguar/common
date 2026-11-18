@@ -146,10 +146,7 @@ func (r *rollbackMgr) deleteIndexEntriesRange(startBlkNum, endBlkNum uint64) err
 	return r.indexStore.db.WriteBatch(r.reusableBatch, true)
 }
 
-//nolint:unparam // Preserve the ported rollback helper signature.
-func addIndexEntriesToBeDeleted(
-	batch *leveldbhelper.UpdateBatch, blockInfo *serializedBlockInfo, indexStore *blockIndex,
-) error {
+func addIndexEntriesToBeDeleted(batch *leveldbhelper.UpdateBatch, blockInfo *serializedBlockInfo, indexStore *blockIndex) error {
 	if indexStore.isAttributeIndexed(IndexableAttrBlockHash) {
 		batch.Delete(constructBlockHashKey(protoutil.BlockHeaderHash(blockInfo.blockHeader)))
 	}

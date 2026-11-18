@@ -38,10 +38,13 @@ type closeFunc func()
 //
 // ExpectedFormat is the expected value of the internal format key. Opening a nonempty
 // database with a different format returns an error. An empty database is initialized
-// with ExpectedFormat unless it is empty, in which case no format record is written.
+// with ExpectedFormat unless ExpectedFormat is empty, in which case no format record is written.
 type Conf struct {
 	DBPath         string
 	ExpectedFormat string
+	// MemTableSize is the steady-state memtable size in bytes. Zero selects 64 MiB.
+	// Pebble queues up to roughly twice this size before stopping writes; other memory is additional.
+	MemTableSize uint64
 }
 
 // Provider partitions one Pebble database into multiple logical databases.
@@ -277,7 +280,7 @@ func (h *DBHandle) NewUpdateBatch() *UpdateBatch {
 	}
 }
 
-// WriteBatch writes a batch in an atomic way.
+// WriteBatch writes a batch atomically once. Reset and rebuild the batch before writing it again.
 func (h *DBHandle) WriteBatch(batch *UpdateBatch, syncToDisk bool) error {
 	if batch == nil {
 		return nil
@@ -292,7 +295,7 @@ func (h *DBHandle) WriteBatch(batch *UpdateBatch, syncToDisk bool) error {
 }
 
 // GetIterator returns an iterator over [startKey, endKey) within this logical database.
-// Nil bounds cover all keys. The caller must release the iterator before closing the provider.
+// Nil bounds cover all keys. Release the iterator after use; closing the provider invalidates it.
 func (h *DBHandle) GetIterator(startKey, endKey []byte) (*Iterator, error) {
 	sKey := constructLevelKey(h.dbName, startKey)
 	eKey := constructLevelKey(h.dbName, endKey)
@@ -370,10 +373,11 @@ type Iterator struct {
 
 // Key wraps actual pebble iterator method.
 func (itr *Iterator) Key() []byte {
-	if !itr.Valid() {
+	key := itr.DBIterator.Key()
+	if key == nil {
 		return nil
 	}
-	return retrieveAppKey(itr.DBIterator.Key())
+	return retrieveAppKey(key)
 }
 
 // Seek moves to the first key/value pair whose key is greater than or equal to key.

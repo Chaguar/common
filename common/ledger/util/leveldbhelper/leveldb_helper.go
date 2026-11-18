@@ -9,7 +9,7 @@ package leveldbhelper
 import (
 	"bytes"
 	"fmt"
-	stdsync "sync"
+	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/cockroachdb/pebble/v2"
@@ -25,6 +25,8 @@ type dbState int32
 const (
 	closed dbState = iota
 	opened
+
+	defaultMemTableSize = 64 << 20
 )
 
 // DB - a wrapper on an actual store.
@@ -32,7 +34,21 @@ type DB struct {
 	conf    *Conf
 	db      *pebble.DB
 	dbState dbState
-	mutex   stdsync.RWMutex
+
+	// mutex keeps the DB open while it is in use. Reads, writes, and iterator calls
+	// share it, so they can run at the same time. Open and Close take it alone, so
+	// Close waits for running calls and no call can use Pebble after it is closed.
+	//
+	// Lock order: mutex, then DBIterator.mutex, then iteratorsMutex.
+	mutex sync.RWMutex
+
+	// iteratorsMutex protects the iterators map. GetIterator and Release could take
+	// mutex alone instead, but then they would wait behind slow sync writes. They
+	// share mutex for speed, so the map needs its own small lock. Close does not
+	// need it because it holds mutex alone.
+	iteratorsMutex sync.Mutex
+	// iterators holds the live iterators that Close must release before closing Pebble.
+	iterators map[*DBIterator]struct{}
 
 	writeOptsNoSync *pebble.WriteOptions
 	writeOptsSync   *pebble.WriteOptions
@@ -47,6 +63,7 @@ func CreateDB(conf *Conf) *DB {
 	return &DB{
 		conf:            conf,
 		dbState:         closed,
+		iterators:       make(map[*DBIterator]struct{}),
 		writeOptsNoSync: writeOptsNoSync,
 		writeOptsSync:   writeOptsSync,
 	}
@@ -61,7 +78,11 @@ func (dbInst *DB) Open() error {
 		return nil
 	}
 
-	dbOpts := &pebble.Options{}
+	memTableSize := dbInst.conf.MemTableSize
+	if memTableSize == 0 {
+		memTableSize = defaultMemTableSize
+	}
+	dbOpts := &pebble.Options{MemTableSize: memTableSize, Logger: logger}
 	dbPath := dbInst.conf.DBPath
 	var err error
 	var dirEmpty bool
@@ -88,25 +109,36 @@ func (dbInst *DB) IsEmpty() (bool, error) {
 			"error checking whether pebble at [%s] is empty", dbInst.conf.DBPath)
 	}
 
-	iter, err := dbInst.db.NewIter(&pebble.IterOptions{})
-	itr := &DBIterator{itr: iter, err: errors.WithStack(err), beforeFirst: true}
-	defer itr.Release()
-
-	hasItems := itr.Next()
-	if err := itr.Error(); err != nil {
+	// This iterator stays under the DB read lock, so Close cannot invalidate it.
+	itr, err := dbInst.db.NewIter(&pebble.IterOptions{})
+	if err != nil {
+		return false, errors.Wrap(err, "error creating pebble iterator")
+	}
+	hasItems := itr.First()
+	err = errors.Join(errors.WithStack(itr.Error()), errors.WithStack(itr.Close()))
+	if err != nil {
 		return false, fmt.Errorf("error checking whether pebble at [%s] is empty: %w", dbInst.conf.DBPath, err)
 	}
 
 	return !hasItems, nil
 }
 
-// Close closes the underlying db.
+// Close invalidates outstanding iterators before closing the underlying DB.
+// Invalidated iterators report pebble.ErrClosed and remain invalid after reopening.
 func (dbInst *DB) Close() {
 	dbInst.mutex.Lock()
 	defer dbInst.mutex.Unlock()
 
 	if dbInst.dbState == closed {
 		return
+	}
+	// The exclusive lifecycle lock excludes iterator operations and registry updates.
+	for itr := range dbInst.iterators {
+		itr.release()
+		if itr.err != nil {
+			logger.Errorf("Error closing pebble iterator: %s", itr.err)
+		}
+		itr.err = errors.Join(itr.err, errors.WithStack(pebble.ErrClosed))
 	}
 	if err := dbInst.db.Close(); err != nil {
 		logger.Errorf("Error closing pebble: %s", err)
@@ -142,7 +174,7 @@ func (dbInst *DB) Get(key []byte) ([]byte, error) {
 }
 
 // Put saves the key/value.
-func (dbInst *DB) Put(key, value []byte, sync bool) error { //nolint:revive // Sync controls durability.
+func (dbInst *DB) Put(key, value []byte, syncToDisk bool) error { //nolint:revive // Preserve the durability flag API.
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
 
@@ -151,7 +183,7 @@ func (dbInst *DB) Put(key, value []byte, sync bool) error { //nolint:revive // S
 	}
 
 	wo := dbInst.writeOptsNoSync
-	if sync {
+	if syncToDisk {
 		wo = dbInst.writeOptsSync
 	}
 
@@ -164,7 +196,7 @@ func (dbInst *DB) Put(key, value []byte, sync bool) error { //nolint:revive // S
 }
 
 // Delete deletes the given key.
-func (dbInst *DB) Delete(key []byte, sync bool) error { //nolint:revive // Sync controls durability.
+func (dbInst *DB) Delete(key []byte, syncToDisk bool) error { //nolint:revive // Preserve the durability flag API.
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
 
@@ -173,7 +205,7 @@ func (dbInst *DB) Delete(key []byte, sync bool) error { //nolint:revive // Sync 
 	}
 
 	wo := dbInst.writeOptsNoSync
-	if sync {
+	if syncToDisk {
 		wo = dbInst.writeOptsSync
 	}
 
@@ -188,21 +220,29 @@ func (dbInst *DB) Delete(key []byte, sync bool) error { //nolint:revive // Sync 
 // GetIterator returns an iterator over key-value store. The iterator should be released after the use.
 // The resultset contains keys between startKey (inclusive) and endKey (exclusive).
 // A nil startKey represents the first available key and a nil endKey represents a logical key
-// after the last available key.
+// after the last available key. Closing the DB invalidates outstanding iterators.
 func (dbInst *DB) GetIterator(startKey, endKey []byte) *DBIterator {
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
 
 	if dbInst.dbState == closed {
-		return &DBIterator{err: errors.WithStack(pebble.ErrClosed)}
+		return &DBIterator{db: dbInst, err: errors.WithStack(pebble.ErrClosed)}
 	}
 
-	itr, err := dbInst.db.NewIter(&pebble.IterOptions{LowerBound: startKey, UpperBound: endKey})
-	return &DBIterator{itr: itr, err: errors.WithStack(err), beforeFirst: true}
+	iter, err := dbInst.db.NewIter(&pebble.IterOptions{LowerBound: startKey, UpperBound: endKey})
+	itr := &DBIterator{db: dbInst, itr: iter, err: errors.WithStack(err), beforeFirst: true}
+	if iter != nil {
+		dbInst.iteratorsMutex.Lock()
+		dbInst.iterators[itr] = struct{}{}
+		dbInst.iteratorsMutex.Unlock()
+	}
+	return itr
 }
 
-// WriteBatch writes a batch without consuming it.
-func (dbInst *DB) WriteBatch(batch *pebble.Batch, sync bool) error { //nolint:revive // Sync controls durability.
+// WriteBatch writes a batch once. Reset and rebuild the batch before writing it again.
+//
+//nolint:revive // Preserve the durability flag API.
+func (dbInst *DB) WriteBatch(batch *pebble.Batch, syncToDisk bool) error {
 	dbInst.mutex.RLock()
 	defer dbInst.mutex.RUnlock()
 
@@ -211,80 +251,13 @@ func (dbInst *DB) WriteBatch(batch *pebble.Batch, sync bool) error { //nolint:re
 	}
 
 	wo := dbInst.writeOptsNoSync
-	if sync {
+	if syncToDisk {
 		wo = dbInst.writeOptsSync
 	}
 
-	// Commit a private batch so callers can reuse or reset their update batch.
-	pending := dbInst.db.NewBatch()
-	defer func() {
-		if err := pending.Close(); err != nil {
-			logger.Errorf("Error closing pebble batch: %s", err)
-		}
-	}()
-
-	if err := pending.Apply(batch, nil); err != nil {
-		return errors.Wrap(err, "error preparing batch for pebble")
-	}
-
-	if err := pending.Commit(wo); err != nil {
+	if err := dbInst.db.Apply(batch, wo); err != nil {
 		return errors.Wrap(err, "error writing batch to pebble")
 	}
 
 	return nil
-}
-
-// FileLock encapsulates the DB that holds the file lock.
-// As the FileLock is to be used by a single process/goroutine,
-// there is no need for the semaphore to synchronize the
-// FileLock usage.
-type FileLock struct {
-	db       *pebble.DB
-	filePath string
-}
-
-// NewFileLock returns a new file based lock manager.
-func NewFileLock(filePath string) *FileLock {
-	return &FileLock{
-		filePath: filePath,
-	}
-}
-
-// Lock acquires a file lock. We achieve this by opening
-// a db for the given filePath. Internally, Pebble acquires a
-// file lock while opening a db. If the db is opened again by the same or
-// another process, an error is returned. When the db is closed
-// or the owner process dies, the lock is released and hence
-// the other process can open the db.
-func (f *FileLock) Lock() error {
-	if f.db != nil {
-		return errors.Newf("lock is already acquired on file %s", f.filePath)
-	}
-	db, err := pebble.Open(f.filePath, nil)
-	if err != nil {
-		return errors.Wrapf(err, "error acquiring lock on file %s", f.filePath)
-	}
-
-	// Only mutate the lock db reference AFTER validating that the lock was held.
-	f.db = db
-
-	return nil
-}
-
-// IsLocked determines if the lock is currently held open.
-func (f *FileLock) IsLocked() bool {
-	return f.db != nil
-}
-
-// Unlock releases a previously acquired lock. We achieve this by closing
-// the previously opened db. Unlock can be called multiple times.
-func (f *FileLock) Unlock() {
-	if f.db == nil {
-		return
-	}
-	if err := f.db.Close(); err != nil {
-		logger.Warnf("Unable to release lock on file %s: %s", f.filePath, err)
-		return
-	}
-	f.db = nil
 }

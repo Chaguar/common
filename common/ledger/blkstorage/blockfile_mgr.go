@@ -92,10 +92,7 @@ At start up a new manager:
 			-- If index and file system are not in sync, syncs index from the FS
 	  *)  Updates blockchain info used by the APIs
 */
-//nolint:gocognit // Preserve the ported block-file initialization flow.
-func newBlockfileMgr(
-	id string, conf *Conf, indexConfig *IndexConfig, indexStore *leveldbhelper.DBHandle,
-) (*blockfileMgr, error) {
+func newBlockfileMgr(id string, conf *Conf, indexConfig *IndexConfig, indexStore *leveldbhelper.DBHandle) (*blockfileMgr, error) {
 	logger.Debugf("newBlockfileMgr() initializing file-based block storage for ledger: %s ", id)
 	rootDir := conf.getLedgerBlockDir(id)
 	_, err := fileutil.CreateDirIfMissing(rootDir)

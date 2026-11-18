@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package leveldbhelper
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -70,7 +71,10 @@ func TestPebbleHelper(t *testing.T) {
 	require.NoError(t, batch.Delete([]byte("key3"), nil))
 	require.NoError(t, db.WriteBatch(batch, true))
 
-	// Writing does not consume the caller's batch.
+	// A written batch must be reset and rebuilt before reuse.
+	require.Panics(t, func() { _ = db.WriteBatch(batch, false) })
+	batch.Reset()
+	require.NoError(t, batch.Set([]byte("key1"), []byte("value1"), nil))
 	require.NoError(t, db.WriteBatch(batch, false))
 	value, err = db.Get([]byte("key3"))
 	require.NoError(t, err)
@@ -90,32 +94,58 @@ func TestPebbleHelper(t *testing.T) {
 	require.ErrorIs(t, db.WriteBatch(batch, true), pebble.ErrClosed)
 }
 
-func TestFileLock(t *testing.T) {
+func TestPebbleMemTableDefault(t *testing.T) {
 	t.Parallel()
 
-	lockPath := filepath.Join(t.TempDir(), "lock")
-	lock1 := NewFileLock(lockPath)
-	lock2 := NewFileLock(lockPath)
-	t.Cleanup(lock1.Unlock)
-	t.Cleanup(lock2.Unlock)
+	dir := t.TempDir()
+	db := CreateDB(&Conf{DBPath: dir})
+	t.Cleanup(db.Close)
+	require.NoError(t, db.Open())
 
-	require.False(t, lock1.IsLocked())
-	require.NoError(t, lock1.Lock())
-	require.True(t, lock1.IsLocked())
+	files, err := filepath.Glob(filepath.Join(dir, "OPTIONS-*"))
+	require.NoError(t, err)
+	require.Len(t, files, 1)
+	options, err := os.ReadFile(files[0])
+	require.NoError(t, err)
+	require.Contains(t, string(options), "mem_table_size=67108864")
+}
 
-	require.Error(t, lock2.Lock())
-	require.False(t, lock2.IsLocked())
-	require.ErrorContains(t, lock1.Lock(), "lock is already acquired")
-	require.True(t, lock1.IsLocked())
-	lock1.Unlock()
-	require.False(t, lock1.IsLocked())
+func TestPebbleBatchResetAndReopen(t *testing.T) {
+	t.Parallel()
 
-	require.NoError(t, lock2.Lock())
-	lock2.Unlock()
-	lock2.Unlock()
-	require.False(t, lock2.IsLocked())
+	for _, tc := range []struct {
+		name string
+		size int
+	}{
+		{name: "small batch", size: 1024},
+		{name: "large batch", size: 600 << 10},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	require.NoError(t, lock1.Lock())
+			db := CreateDB(&Conf{DBPath: t.TempDir(), MemTableSize: 1 << 20})
+			t.Cleanup(db.Close)
+			require.NoError(t, db.Open())
+			value := bytes.Repeat([]byte("v"), tc.size)
+			batch := &pebble.Batch{}
+			require.NoError(t, batch.Set([]byte("first"), value, nil))
+			require.NoError(t, db.WriteBatch(batch, false))
+
+			batch.Reset()
+			require.NoError(t, batch.Set([]byte("second"), []byte("reset"), nil))
+			require.NoError(t, db.WriteBatch(batch, true))
+			require.NoError(t, batch.Close())
+			db.Close()
+			require.NoError(t, db.Open())
+
+			got, err := db.Get([]byte("first"))
+			require.NoError(t, err)
+			require.Equal(t, value, got)
+			got, err = db.Get([]byte("second"))
+			require.NoError(t, err)
+			require.Equal(t, []byte("reset"), got)
+		})
+	}
 }
 
 func TestCreateDBInEmptyDir(t *testing.T) {

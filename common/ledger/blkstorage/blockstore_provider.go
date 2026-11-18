@@ -62,6 +62,7 @@ func NewProvider(conf *Conf, indexConfig *IndexConfig, metricsProvider metrics.P
 	dbConf := &leveldbhelper.Conf{
 		DBPath:         conf.getIndexDir(),
 		ExpectedFormat: dataFormatVersion(indexConfig),
+		MemTableSize:   conf.IndexMemTableSize,
 	}
 
 	p, err := leveldbhelper.NewProvider(dbConf)

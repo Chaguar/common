@@ -9,6 +9,8 @@ package blkstorage
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -327,6 +329,37 @@ func TestBlockStorePebbleReopen(t *testing.T) {
 
 	require.NoError(t, store.AddBlock(blocks[1]))
 	checkBlocks(t, blocks, store)
+}
+
+func TestBlockStoreIndexMemTableSize(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name string
+		size uint64
+		want string
+	}{
+		{name: "default", want: "mem_table_size=67108864"},
+		{name: "smaller override", size: 16 << 20, want: "mem_table_size=16777216"},
+		{name: "larger override", size: 128 << 20, want: "mem_table_size=134217728"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			conf := NewConf(t.TempDir(), 0)
+			conf.IndexMemTableSize = tc.size
+			provider, err := NewProvider(conf, &IndexConfig{AttrsToIndex: attrsToIndex}, &disabled.Provider{})
+			require.NoError(t, err)
+			t.Cleanup(provider.Close)
+
+			files, err := filepath.Glob(filepath.Join(conf.getIndexDir(), "OPTIONS-*"))
+			require.NoError(t, err)
+			require.Len(t, files, 1)
+			options, err := os.ReadFile(files[0])
+			require.NoError(t, err)
+			require.Contains(t, string(options), tc.want)
+		})
+	}
 }
 
 func constructLedgerid(id int) string {
