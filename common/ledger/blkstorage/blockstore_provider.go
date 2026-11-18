@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Chaguar/common/common/ledger/dataformat"
-	"github.com/Chaguar/common/common/ledger/util/leveldbhelper"
+	"github.com/Chaguar/common/common/ledger/util/pebblehelper"
 	"github.com/Chaguar/common/tools/fileutil"
 )
 
@@ -51,21 +51,21 @@ func (c *IndexConfig) Contains(indexableAttr IndexableAttr) bool {
 
 // BlockStoreProvider provides handle to block storage - this is not thread-safe
 type BlockStoreProvider struct {
-	conf            *Conf
-	indexConfig     *IndexConfig
-	leveldbProvider *leveldbhelper.Provider
-	stats           *stats
+	conf           *Conf
+	indexConfig    *IndexConfig
+	pebbleProvider *pebblehelper.Provider
+	stats          *stats
 }
 
 // NewProvider constructs a filesystem based block store provider
 func NewProvider(conf *Conf, indexConfig *IndexConfig, metricsProvider metrics.Provider) (*BlockStoreProvider, error) {
-	dbConf := &leveldbhelper.Conf{
+	dbConf := &pebblehelper.Conf{
 		DBPath:         conf.getIndexDir(),
 		ExpectedFormat: dataFormatVersion(indexConfig),
 		MemTableSize:   conf.IndexMemTableSize,
 	}
 
-	p, err := leveldbhelper.NewProvider(dbConf)
+	p, err := pebblehelper.NewProvider(dbConf)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func NewProvider(conf *Conf, indexConfig *IndexConfig, metricsProvider metrics.P
 // If a blockstore is not existing, this method creates one
 // This method should be invoked only once for a particular ledgerid
 func (p *BlockStoreProvider) Open(ledgerid string) (*BlockStore, error) {
-	indexStoreHandle := p.leveldbProvider.GetDBHandle(ledgerid)
+	indexStoreHandle := p.pebbleProvider.GetDBHandle(ledgerid)
 	return newBlockStore(ledgerid, p.conf, p.indexConfig, indexStoreHandle, p.stats)
 }
 
@@ -103,7 +103,7 @@ func (p *BlockStoreProvider) ImportFromSnapshot(
 	snapshotDir string,
 	snapshotInfo *SnapshotInfo,
 ) error {
-	indexStoreHandle := p.leveldbProvider.GetDBHandle(ledgerID)
+	indexStoreHandle := p.pebbleProvider.GetDBHandle(ledgerID)
 	if err := bootstrapFromSnapshottedTxIDs(ledgerID, snapshotDir, snapshotInfo, p.conf, indexStoreHandle); err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func (p *BlockStoreProvider) Drop(ledgerid string) error {
 	if !exists {
 		return nil
 	}
-	if err := p.leveldbProvider.Drop(ledgerid); err != nil {
+	if err := p.pebbleProvider.Drop(ledgerid); err != nil {
 		return err
 	}
 	if err := os.RemoveAll(p.conf.getLedgerBlockDir(ledgerid)); err != nil {
@@ -145,7 +145,7 @@ func (p *BlockStoreProvider) List() ([]string, error) {
 
 // Close closes the BlockStoreProvider
 func (p *BlockStoreProvider) Close() {
-	p.leveldbProvider.Close()
+	p.pebbleProvider.Close()
 }
 
 func dataFormatVersion(indexConfig *IndexConfig) string {

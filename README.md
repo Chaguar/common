@@ -43,7 +43,7 @@ to the shared physical index DB, not each ledger. Pebble can queue roughly twice
 size before stopping writes (128 MiB with the default); cache and other allocations
 are additional. Lower values reduce memory pressure but can reduce write throughput.
 
-`leveldbhelper` update batches are written once; call `Reset` and rebuild before
+`pebblehelper` update batches are written once; call `Reset` and rebuild before
 writing a batch again. The unused `FileLock` helper has been removed.
 
 Closing the index provider releases and invalidates its outstanding iterators.

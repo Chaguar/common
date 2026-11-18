@@ -14,7 +14,7 @@ import (
 
 	"github.com/Chaguar/common/common/ledger"
 	"github.com/Chaguar/common/common/ledger/snapshot"
-	"github.com/Chaguar/common/common/ledger/util/leveldbhelper"
+	"github.com/Chaguar/common/common/ledger/util/pebblehelper"
 )
 
 // BlockStore - filesystem based implementation for `BlockStore`
@@ -27,7 +27,7 @@ type BlockStore struct {
 
 // newBlockStore constructs a `BlockStore`
 func newBlockStore(id string, conf *Conf, indexConfig *IndexConfig,
-	dbHandle *leveldbhelper.DBHandle, stats *stats,
+	dbHandle *pebblehelper.DBHandle, stats *stats,
 ) (*BlockStore, error) {
 	fileMgr, err := newBlockfileMgr(id, conf, indexConfig, dbHandle)
 	if err != nil {

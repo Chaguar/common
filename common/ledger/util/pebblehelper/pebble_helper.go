@@ -4,7 +4,7 @@ Copyright IBM Corp. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 
-package leveldbhelper
+package pebblehelper
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ import (
 	"github.com/Chaguar/common/tools/fileutil"
 )
 
-var logger = flogging.MustGetLogger("leveldbhelper")
+var logger = flogging.MustGetLogger("pebblehelper")
 
 type dbState int32
 

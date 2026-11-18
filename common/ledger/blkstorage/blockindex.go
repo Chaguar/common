@@ -20,7 +20,7 @@ import (
 
 	"github.com/Chaguar/common/common/ledger/snapshot"
 	"github.com/Chaguar/common/common/ledger/util"
-	"github.com/Chaguar/common/common/ledger/util/leveldbhelper"
+	"github.com/Chaguar/common/common/ledger/util/pebblehelper"
 	"github.com/Chaguar/common/tools/pkg/txflags"
 )
 
@@ -56,10 +56,11 @@ type blockIdxInfo struct {
 
 type blockIndex struct {
 	indexItemsMap map[IndexableAttr]bool
-	db            *leveldbhelper.DBHandle
+	db            *pebblehelper.DBHandle
 }
 
-func newBlockIndex(indexConfig *IndexConfig, db *leveldbhelper.DBHandle) (*blockIndex, error) {
+//nolint:unparam // Ported from Fabric; keep upstream signature.
+func newBlockIndex(indexConfig *IndexConfig, db *pebblehelper.DBHandle) (*blockIndex, error) {
 	indexItems := indexConfig.AttrsToIndex
 	logger.Debugf("newBlockIndex() - indexItems:[%s]", indexItems)
 	indexItemsMap := make(map[IndexableAttr]bool)
@@ -373,7 +374,7 @@ func (index *blockIndex) exportUniqueTxIDs(dir string, newHashFunc snapshot.NewH
 func importTxIDsFromSnapshot(
 	snapshotDir string,
 	lastBlockNumInSnapshot uint64,
-	db *leveldbhelper.DBHandle,
+	db *pebblehelper.DBHandle,
 ) error {
 	txIDsMetadata, err := snapshot.OpenFile(filepath.Join(snapshotDir, snapshotMetadataFileName), snapshotFileFormat)
 	if err != nil {

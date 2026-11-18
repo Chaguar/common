@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/Chaguar/common/common/ledger/util/leveldbhelper"
+	"github.com/Chaguar/common/common/ledger/util/pebblehelper"
 	"github.com/Chaguar/common/protoutil"
 	"github.com/Chaguar/common/tools/fileutil"
 )
@@ -20,10 +20,10 @@ type rollbackMgr struct {
 	ledgerID       string
 	ledgerDir      string
 	indexDir       string
-	dbProvider     *leveldbhelper.Provider
+	dbProvider     *pebblehelper.Provider
 	indexStore     *blockIndex
 	targetBlockNum uint64
-	reusableBatch  *leveldbhelper.UpdateBatch
+	reusableBatch  *pebblehelper.UpdateBatch
 }
 
 // Rollback reverts changes made to the block store beyond a given block number.
@@ -61,8 +61,8 @@ func newRollbackMgr(blockStorageDir, ledgerID string, indexConfig *IndexConfig, 
 
 	r.indexDir = conf.getIndexDir()
 	var err error
-	r.dbProvider, err = leveldbhelper.NewProvider(
-		&leveldbhelper.Conf{
+	r.dbProvider, err = pebblehelper.NewProvider(
+		&pebblehelper.Conf{
 			DBPath:         r.indexDir,
 			ExpectedFormat: dataFormatVersion(indexConfig),
 		},
@@ -146,7 +146,10 @@ func (r *rollbackMgr) deleteIndexEntriesRange(startBlkNum, endBlkNum uint64) err
 	return r.indexStore.db.WriteBatch(r.reusableBatch, true)
 }
 
-func addIndexEntriesToBeDeleted(batch *leveldbhelper.UpdateBatch, blockInfo *serializedBlockInfo, indexStore *blockIndex) error {
+//nolint:unparam // Ported from Fabric; keep upstream signature.
+func addIndexEntriesToBeDeleted(
+	batch *pebblehelper.UpdateBatch, blockInfo *serializedBlockInfo, indexStore *blockIndex,
+) error {
 	if indexStore.isAttributeIndexed(IndexableAttrBlockHash) {
 		batch.Delete(constructBlockHashKey(protoutil.BlockHeaderHash(blockInfo.blockHeader)))
 	}
