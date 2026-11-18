@@ -25,7 +25,6 @@ TESTS*.xml
 .tox/
 .vagrant/
 .vscode
-.bob/
 # Per-user local Claude settings are not shared
 .claude/settings.local.json
 .worktrees/
