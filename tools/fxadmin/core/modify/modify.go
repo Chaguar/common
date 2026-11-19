@@ -65,12 +65,6 @@ func (*Handler) AppKnownCertsRemove(org string, certPaths []string, blockPath st
 	return ErrNotImplemented
 }
 
-// PartyRemove implements `fxadmin modify party remove`.
-func (*Handler) PartyRemove(partyID uint32, blockPath string) error {
-	logger.Debugf("modify party remove: partyID=%d block=%s (not implemented)", partyID, blockPath)
-	return ErrNotImplemented
-}
-
 // PartyCA implements `fxadmin modify party ca add|remove|set`.
 func (*Handler) PartyCA(ch change.CA) error {
 	logger.Debugf("modify party ca: %+v (not implemented)", ch)
@@ -96,6 +90,8 @@ func readAndDecodeConfigBlock(path string) (*helpers.ConfigBlock, error) {
 // writes the block to the file at path, in place. An invalid edit is rejected
 // here, before the file is written, rather than after the update has collected
 // its endorsements.
+// TODO: remove the bundle check once the orderer's ValidateNewConfig is
+// integrated into fxadmin: building the same bundle is its first step.
 func validateEncodeAndWriteConfigBlock(block *helpers.ConfigBlock, path string) error {
 	channelID := block.ChannelHeader.GetChannelId()
 	if _, err := channelconfig.NewBundle(channelID, block.Config(), factory.GetDefault()); err != nil {

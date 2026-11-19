@@ -10,8 +10,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/cockroachdb/errors"
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
@@ -24,6 +26,7 @@ import (
 	"github.com/Chaguar/common/common/channelconfig"
 	"github.com/Chaguar/common/protolator"
 	"github.com/Chaguar/common/protolator/protoext/ordererext"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
 // Keys of a party definition: the party's entry of the shared config, the
@@ -171,6 +174,179 @@ func addConsenter(orderer *cb.ConfigGroup, consenter *cb.Consenter) ([]*cb.Conse
 		return nil, err
 	}
 	return orderers.orderers.GetConsenterMapping(), nil
+}
+
+// PartyRemove implements `fxadmin modify party remove`. It removes the party
+// from the config block at blockPath, which is rewritten in place, and its
+// orderer org with it, unless the org also runs another party. The command
+// also updates the elements of the block that must agree with the remaining
+// parties: the Orderers value, the Endpoints value of a kept org, and the
+// Orderer group's BlockValidation policy over the remaining consenters.
+func (*Handler) PartyRemove(partyID uint32, blockPath string) error {
+	logger.Debugf("modify party remove: partyID=%d block=%s", partyID, blockPath)
+
+	block, err := readAndDecodeConfigBlock(blockPath)
+	if err != nil {
+		return err
+	}
+	orderer := block.Config().GetChannelGroup().GetGroups()[channelconfig.OrdererGroupKey]
+	if orderer == nil {
+		return errors.Newf("the config has no %s group", channelconfig.OrdererGroupKey)
+	}
+	orgName, orgKept, err := removeParty(orderer, partyID)
+	if err != nil {
+		return err
+	}
+
+	if err := validateEncodeAndWriteConfigBlock(block, blockPath); err != nil {
+		return err
+	}
+	if orgKept {
+		logger.Infof("removed party %d from %s, and kept its orderer org %s, which runs other parties",
+			partyID, blockPath, orgName)
+		return nil
+	}
+	logger.Infof("removed party %d with orderer org %s from %s", partyID, orgName, blockPath)
+	return nil
+}
+
+// removeParty removes the party from the Orderer group, in each of the places
+// the block holds a party, and returns the name of the party's orderer org and
+// whether the org is kept:
+//   - the shared config (the ConsensusType value's metadata): the party is
+//     removed from PartiesConfig, and MaxPartyID is kept;
+//   - the consenter mapping (the Orderers value): the party's consenter is
+//     removed;
+//   - the orderer org: a party belongs to one org, the org whose MSP ID is that
+//     of the party's consenter, as the orderer associates them. The org, and
+//     with it its Endpoints value, is removed. An org can run several parties,
+//     so if the consenter of another party has the same MSP ID, the org is
+//     kept, and only the party's endpoints are removed from its Endpoints
+//     value. An org lists only the endpoints of its own parties, so the
+//     Endpoints values of other orgs are not changed;
+//   - the BlockValidation policy: it is recomputed over the remaining
+//     consenters' signing certificates.
+func removeParty(orderer *cb.ConfigGroup, partyID uint32) (orgName string, orgKept bool, err error) {
+	if err = removeFromSharedConfig(orderer, partyID); err != nil {
+		return "", false, err
+	}
+	consenter, consenters, err := removeConsenter(orderer, partyID)
+	if err != nil {
+		return "", false, err
+	}
+	orgName, err = ordererOrgOf(orderer, consenter.GetMspId())
+	if err != nil {
+		return "", false, fmt.Errorf("the orderer org of party %d: %w", partyID, err)
+	}
+
+	orgKept = slices.ContainsFunc(consenters, func(c *cb.Consenter) bool {
+		return c.GetMspId() == consenter.GetMspId()
+	})
+	if !orgKept {
+		delete(orderer.Groups, orgName)
+	} else if err = removeOrgPartyEndpoints(orderer.GetGroups()[orgName], partyID); err != nil {
+		return "", false, fmt.Errorf("orderer org %q: %w", orgName, err)
+	}
+	return orgName, orgKept, recomputeBlockValidation(orderer, consenters)
+}
+
+// removeFromSharedConfig removes the party from the ARMA shared config, the
+// consensus metadata of the Orderer group's ConsensusType value. MaxPartyID is
+// kept: the orderer allows it to change only when a party is added, so that a
+// removed party's PartyID is never reused. The only party is not removed, as
+// that would leave the ordering service with no party.
+func removeFromSharedConfig(orderer *cb.ConfigGroup, partyID uint32) error {
+	consensusType, err := decodeConsensusType(orderer)
+	if err != nil {
+		return err
+	}
+	shared := consensusType.sharedConfig
+	i := slices.IndexFunc(shared.GetPartiesConfig(), func(p *ordererpb.PartyConfig) bool {
+		return p.GetPartyID() == partyID
+	})
+	if i < 0 {
+		return errors.Newf("the shared config has no party %d", partyID)
+	}
+	if len(shared.GetPartiesConfig()) == 1 {
+		return errors.Newf("party %d is the only party of the shared config, and cannot be removed", partyID)
+	}
+	shared.PartiesConfig = slices.Delete(shared.PartiesConfig, i, i+1)
+	return consensusType.encode()
+}
+
+// removeConsenter removes the party's consenter from the consenter mapping of
+// the Orderer group's Orderers value, and returns the removed consenter and the
+// remaining mapping.
+func removeConsenter(orderer *cb.ConfigGroup, partyID uint32) (*cb.Consenter, []*cb.Consenter, error) {
+	orderers, err := decodeOrderers(orderer)
+	if err != nil {
+		return nil, nil, err
+	}
+	mapping := orderers.orderers.GetConsenterMapping()
+	i := slices.IndexFunc(mapping, func(c *cb.Consenter) bool {
+		return c.GetId() == partyID
+	})
+	if i < 0 {
+		return nil, nil, errors.Newf("the consenter mapping has no consenter of party %d", partyID)
+	}
+	consenter := mapping[i]
+	orderers.orderers.ConsenterMapping = slices.Delete(mapping, i, i+1)
+	if err := orderers.encode(); err != nil {
+		return nil, nil, err
+	}
+	return consenter, orderers.orderers.GetConsenterMapping(), nil
+}
+
+// ordererOrgOf returns the name of the orderer org whose MSP ID is mspID. It
+// errors if no org, or more than one, has that MSP ID, as the org a consenter
+// of that MSP ID is associated with would not be known.
+func ordererOrgOf(orderer *cb.ConfigGroup, mspID string) (string, error) {
+	var names []string
+	for _, name := range slices.Sorted(maps.Keys(orderer.GetGroups())) {
+		orgMSP, err := orgMSPID(orderer.GetGroups()[name])
+		if err != nil {
+			return "", fmt.Errorf("orderer org %q: %w", name, err)
+		}
+		if orgMSP == mspID {
+			names = append(names, name)
+		}
+	}
+	switch len(names) {
+	case 0:
+		return "", errors.Newf("no orderer org has MSP ID %q", mspID)
+	case 1:
+		return names[0], nil
+	default:
+		return "", errors.Newf("orderer orgs %q all have MSP ID %q", names, mspID)
+	}
+}
+
+// removeOrgPartyEndpoints removes the party's endpoints, the addresses with its
+// ID, from the org's Endpoints value.
+func removeOrgPartyEndpoints(org *cb.ConfigGroup, partyID uint32) error {
+	value, addresses, err := decodeOrgEndpoints(org)
+	if err != nil || value == nil {
+		return err
+	}
+	kept := make([]string, 0, len(addresses.GetAddresses()))
+	for _, address := range addresses.GetAddresses() {
+		// A malformed address might be the party's, so keeping it could leave an
+		// endpoint of the removed party.
+		endpoint, parseErr := types.ParseOrdererEndpoint(address)
+		if parseErr != nil {
+			return fmt.Errorf("failed to parse endpoint %q: %w", address, parseErr)
+		}
+		if endpoint.ID != partyID {
+			kept = append(kept, address)
+		}
+	}
+	addresses.Addresses = kept
+	content, err := helpers.DeterministicMarshal.Marshal(addresses)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal the Endpoints value")
+	}
+	value.Value = content
+	return nil
 }
 
 // validatePartyHosts checks that the host of each of the party's nodes is an IP
