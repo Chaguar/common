@@ -176,13 +176,6 @@ func addConsenter(orderer *cb.ConfigGroup, consenter *cb.Consenter) ([]*cb.Conse
 	return orderers.orderers.GetConsenterMapping(), nil
 }
 
-// removedParty is the outcome of removeParty: the name of the party's orderer
-// org, and the other parties of the org, for which it is kept.
-type removedParty struct {
-	orgName      string
-	otherParties []uint32
-}
-
 // PartyRemove implements `fxadmin modify party remove`. It removes the party
 // from the config block at blockPath, which is rewritten in place, and its
 // orderer org with it, unless the org also runs another party. The command
@@ -200,7 +193,7 @@ func (*Handler) PartyRemove(partyID uint32, blockPath string) error {
 	if orderer == nil {
 		return errors.Newf("the config has no %s group", channelconfig.OrdererGroupKey)
 	}
-	removed, err := removeParty(orderer, partyID)
+	orgName, orgKept, err := removeParty(orderer, partyID)
 	if err != nil {
 		return err
 	}
@@ -208,17 +201,18 @@ func (*Handler) PartyRemove(partyID uint32, blockPath string) error {
 	if err := validateEncodeAndWriteConfigBlock(block, blockPath); err != nil {
 		return err
 	}
-	if len(removed.otherParties) > 0 {
-		logger.Infof("removed party %d from %s, and kept its orderer org %s, which also runs parties %v",
-			partyID, blockPath, removed.orgName, removed.otherParties)
+	if orgKept {
+		logger.Infof("removed party %d from %s, and kept its orderer org %s, which runs other parties",
+			partyID, blockPath, orgName)
 		return nil
 	}
-	logger.Infof("removed party %d with orderer org %s from %s", partyID, removed.orgName, blockPath)
+	logger.Infof("removed party %d with orderer org %s from %s", partyID, orgName, blockPath)
 	return nil
 }
 
 // removeParty removes the party from the Orderer group, in each of the places
-// the block holds a party:
+// the block holds a party, and returns the name of the party's orderer org and
+// whether the org is kept:
 //   - the shared config (the ConsensusType value's metadata): the party is
 //     removed from PartiesConfig, and MaxPartyID is kept;
 //   - the consenter mapping (the Orderers value): the party's consenter is
@@ -232,31 +226,28 @@ func (*Handler) PartyRemove(partyID uint32, blockPath string) error {
 //     Endpoints values of other orgs are not changed;
 //   - the BlockValidation policy: it is recomputed over the remaining
 //     consenters' signing certificates.
-func removeParty(orderer *cb.ConfigGroup, partyID uint32) (*removedParty, error) {
-	if err := removeFromSharedConfig(orderer, partyID); err != nil {
-		return nil, err
+func removeParty(orderer *cb.ConfigGroup, partyID uint32) (orgName string, orgKept bool, err error) {
+	if err = removeFromSharedConfig(orderer, partyID); err != nil {
+		return "", false, err
 	}
 	consenter, consenters, err := removeConsenter(orderer, partyID)
 	if err != nil {
-		return nil, err
+		return "", false, err
 	}
-	orgName, err := ordererOrgOf(orderer, consenter.GetMspId())
+	orgName, err = ordererOrgOf(orderer, consenter.GetMspId())
 	if err != nil {
-		return nil, fmt.Errorf("the orderer org of party %d: %w", partyID, err)
+		return "", false, fmt.Errorf("the orderer org of party %d: %w", partyID, err)
 	}
 
-	removed := &removedParty{orgName: orgName}
-	for _, c := range consenters {
-		if c.GetMspId() == consenter.GetMspId() {
-			removed.otherParties = append(removed.otherParties, c.GetId())
-		}
-	}
-	if len(removed.otherParties) == 0 {
+	orgKept = slices.ContainsFunc(consenters, func(c *cb.Consenter) bool {
+		return c.GetMspId() == consenter.GetMspId()
+	})
+	if !orgKept {
 		delete(orderer.Groups, orgName)
-	} else if err := removeOrgPartyEndpoints(orderer.GetGroups()[orgName], partyID); err != nil {
-		return nil, fmt.Errorf("orderer org %q: %w", orgName, err)
+	} else if err = removeOrgPartyEndpoints(orderer.GetGroups()[orgName], partyID); err != nil {
+		return "", false, fmt.Errorf("orderer org %q: %w", orgName, err)
 	}
-	return removed, recomputeBlockValidation(orderer, consenters)
+	return orgName, orgKept, recomputeBlockValidation(orderer, consenters)
 }
 
 // removeFromSharedConfig removes the party from the ARMA shared config, the
