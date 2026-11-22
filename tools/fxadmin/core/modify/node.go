@@ -183,18 +183,26 @@ func validateHost(host string) error {
 // the file at path and returns it PEM-encoded, the form the shared config
 // stores.
 func readCertificateFile(path string) ([]byte, error) {
+	_, content, err := parseCertificateFile(path)
+	return content, err
+}
+
+// parseCertificateFile reads the PEM-encoded X.509 certificate at the start of
+// the file at path, and returns it parsed and PEM-encoded.
+func parseCertificateFile(path string) (*x509.Certificate, []byte, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read certificate %q", path)
+		return nil, nil, errors.Wrapf(err, "failed to read certificate %q", path)
 	}
 	block, _ := pem.Decode(content)
 	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, errors.Newf("%q is not a PEM-encoded certificate", path)
+		return nil, nil, errors.Newf("%q is not a PEM-encoded certificate", path)
 	}
-	if _, err := x509.ParseCertificate(block.Bytes); err != nil {
-		return nil, errors.Wrapf(err, "failed to parse certificate %q", path)
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "failed to parse certificate %q", path)
 	}
-	return pem.EncodeToMemory(&pem.Block{Type: block.Type, Bytes: block.Bytes}), nil
+	return cert, pem.EncodeToMemory(&pem.Block{Type: block.Type, Bytes: block.Bytes}), nil
 }
 
 // changeNode sets the node's fields in the shared config and carries the change
@@ -204,15 +212,9 @@ func changeNode(orderer *cb.ConfigGroup, nc *nodeChange) error {
 	if err != nil {
 		return err
 	}
-	var party *ordererpb.PartyConfig
-	for _, p := range consensusType.sharedConfig.GetPartiesConfig() {
-		if p.GetPartyID() == nc.party {
-			party = p
-			break
-		}
-	}
-	if party == nil {
-		return errors.Newf("the shared config has no party %d", nc.party)
+	party, err := partyConfigOf(consensusType.sharedConfig, nc.party)
+	if err != nil {
+		return err
 	}
 	node, err := nodeConfigOf(party, nc)
 	if err != nil {
@@ -231,6 +233,16 @@ func changeNode(orderer *cb.ConfigGroup, nc *nodeChange) error {
 	default:
 		return nil
 	}
+}
+
+// partyConfigOf returns the shared config's entry of the party.
+func partyConfigOf(shared *ordererpb.SharedConfig, partyID uint32) (*ordererpb.PartyConfig, error) {
+	for _, party := range shared.GetPartiesConfig() {
+		if party.GetPartyID() == partyID {
+			return party, nil
+		}
+	}
+	return nil, errors.Newf("the shared config has no party %d", partyID)
 }
 
 // nodeConfigOf returns the endpoint and certificates of the node the change

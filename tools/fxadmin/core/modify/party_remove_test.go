@@ -236,12 +236,17 @@ func TestPartyRemoveRejects(t *testing.T) {
 // so a test can tell that an edit keeps them.
 func newRemoveTestBlock(t *testing.T, orgs ...cryptogen.OrganizationParameters) []byte {
 	t.Helper()
-	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(cryptogen.ConfigBlockParameters{
-		TargetPath:    t.TempDir(),
-		BaseProfile:   configtxgen.SampleChaguar,
-		ChannelID:     testChannelID,
-		Organizations: orgs,
-	})
+	return newPartiesTestBlock(t, cryptogen.ConfigBlockParameters{Organizations: orgs})
+}
+
+// newPartiesTestBlock returns the block of newRemoveTestBlock, generated with
+// params, for the test's channel and the Chaguar sample profile.
+func newPartiesTestBlock(t *testing.T, params cryptogen.ConfigBlockParameters) []byte {
+	t.Helper()
+	params.TargetPath = t.TempDir()
+	params.BaseProfile = configtxgen.SampleChaguar
+	params.ChannelID = testChannelID
+	block, err := cryptogen.CreateOrExtendConfigBlockWithCrypto(params)
 	require.NoError(t, err)
 	configBlock, err := helpers.DecodeConfigBlock(block)
 	require.NoError(t, err)
