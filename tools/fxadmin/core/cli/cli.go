@@ -419,12 +419,37 @@ func (c *CLI) addModifyPartyNodeCommand(party *kingpin.CmdClause) {
 }
 
 // addModifyPartyCACommands wires `fxadmin modify party ca add|remove|set` over a
-// party's CA (--sign-cert) and TLS-CA (--tls-cert) certificate lists.
+// party's CA (--sign-cert) and TLS-CA (--tls-cert) certificate lists, and
+// `fxadmin modify party ca node-ous`, which moves the node OUs of the party's
+// org MSP to one of its CAs.
 func (c *CLI) addModifyPartyCACommands(party *kingpin.CmdClause) {
-	ca := party.Command("ca", "Change a party's CA and/or TLS-CA certificate lists.")
-	for _, op := range []string{"add", "remove", "set"} {
+	ca := party.Command("ca",
+		"Change a party's CA and/or TLS-CA certificate lists, or the CA its org's node OUs pin.")
+	for _, op := range []string{change.CAOpAdd, change.CAOpRemove, change.CAOpSet} {
 		c.registerPartyCAOp(ca, op)
 	}
+	c.addModifyPartyCANodeOUsCommand(ca)
+}
+
+// addModifyPartyCANodeOUsCommand wires `fxadmin modify party ca node-ous`, which
+// points the node OUs of the party's org MSP at one CA of the party's CA list.
+// The CA lists are left unchanged.
+func (c *CLI) addModifyPartyCANodeOUsCommand(ca *kingpin.CmdClause) {
+	cmd := ca.Command(change.CAOpNodeOUs, "Point the node OUs of the party's org MSP at one of the party's CAs. "+
+		"Run it in the same config update as `modify party node --sign-cert` for every node of the org's parties: "+
+		"an identity keeps its role only if the CA the node OUs pin issued it.")
+	partyID := cmd.Flag(flagParty, "Party whose org's node OUs change.").Required().Uint32()
+	signCert := cmd.Flag(flagSignCert, "PEM path of the CA the node OUs pin; it must be in the party's CA list.").
+		Required().ExistingFile()
+	block := blockFlag(cmd)
+	c.register(cmd, func() error {
+		return c.handlers.Modify.PartyCA(change.CA{
+			Op:        change.CAOpNodeOUs,
+			Party:     *partyID,
+			SignCerts: []string{*signCert},
+			BlockPath: *block,
+		})
+	})
 }
 
 // registerPartyCAOp wires one `modify party ca` sub-verb (add, remove, or set).

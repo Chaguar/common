@@ -21,9 +21,20 @@ type Node struct {
 	BlockPath string
 }
 
-// CA is a `modify party ca add|remove|set` request over a party's CA
-// (SignCerts) and TLS-CA (TLSCerts) certificate lists. Op is the sub-verb.
-// An empty field is left unchanged.
+// The operations of a CA request, as the `modify party ca` sub-verbs name them.
+// The CLI and the handler both use them, so that they agree on the names.
+const (
+	CAOpAdd     = "add"
+	CAOpRemove  = "remove"
+	CAOpSet     = "set"
+	CAOpNodeOUs = "node-ous"
+)
+
+// CA is a `modify party ca add|remove|set|node-ous` request. add, remove and
+// set change a party's CA (SignCerts) and TLS-CA (TLSCerts) certificate lists;
+// node-ous points the node OUs of the party's org MSP at a CA (SignCerts, a
+// single one). Op is the sub-verb, one of the CAOp constants. An empty field is
+// left unchanged.
 type CA struct {
 	Op        string
 	Party     uint32

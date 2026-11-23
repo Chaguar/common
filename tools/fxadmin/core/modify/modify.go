@@ -24,7 +24,6 @@ import (
 
 	"github.com/Chaguar/common/common/channelconfig"
 	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
-	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
 var logger = flogging.MustGetLogger("fxadmin.modify")
@@ -62,12 +61,6 @@ func (*Handler) AppKnownCertsAdd(org string, certPaths []string, blockPath strin
 // AppKnownCertsRemove implements `fxadmin modify app known-certs remove`.
 func (*Handler) AppKnownCertsRemove(org string, certPaths []string, blockPath string) error {
 	logger.Debugf("modify app known-certs remove: org=%s certs=%v block=%s (not impl.)", org, certPaths, blockPath)
-	return ErrNotImplemented
-}
-
-// PartyCA implements `fxadmin modify party ca add|remove|set`.
-func (*Handler) PartyCA(ch change.CA) error {
-	logger.Debugf("modify party ca: %+v (not implemented)", ch)
 	return ErrNotImplemented
 }
 

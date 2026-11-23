@@ -411,22 +411,57 @@ func validateOrgEndpoints(org *cb.ConfigGroup) error {
 
 // orgMSPID returns the MSP ID of an org group: the name of its Fabric MSP.
 func orgMSPID(org *cb.ConfigGroup) (string, error) {
+	orgMSP, err := decodeOrgMSP(org)
+	if err != nil {
+		return "", err
+	}
+	if orgMSP.fabricConfig.GetName() == "" {
+		return "", errors.New("the Fabric MSP has no name")
+	}
+	return orgMSP.fabricConfig.GetName(), nil
+}
+
+// decodedOrgMSP is an org's MSP config value with its two encoded layers
+// decoded: the MSP config it holds, and the Fabric MSP config that is the MSP
+// config's content. It keeps every layer, so that encode can write a changed
+// Fabric MSP config back into the config value.
+type decodedOrgMSP struct {
+	configValue  *cb.ConfigValue
+	mspConfig    *mspproto.MSPConfig
+	fabricConfig *mspproto.FabricMSPConfig
+}
+
+// decodeOrgMSP decodes the org's MSP config value down to its Fabric MSP config.
+func decodeOrgMSP(org *cb.ConfigGroup) (*decodedOrgMSP, error) {
 	value := org.GetValues()[channelconfig.MSPKey]
 	if value == nil {
-		return "", errors.Newf("no %s value", channelconfig.MSPKey)
+		return nil, errors.Newf("no %s value", channelconfig.MSPKey)
 	}
 	mspConfig := &mspproto.MSPConfig{}
 	if err := proto.Unmarshal(value.GetValue(), mspConfig); err != nil {
-		return "", errors.Wrap(err, "failed to unmarshal the MSP value")
+		return nil, errors.Wrap(err, "failed to unmarshal the MSP value")
 	}
 	fabricConfig := &mspproto.FabricMSPConfig{}
 	if err := proto.Unmarshal(mspConfig.GetConfig(), fabricConfig); err != nil {
-		return "", errors.Wrap(err, "failed to unmarshal the Fabric MSP config")
+		return nil, errors.Wrap(err, "failed to unmarshal the Fabric MSP config")
 	}
-	if fabricConfig.GetName() == "" {
-		return "", errors.New("the Fabric MSP has no name")
+	return &decodedOrgMSP{configValue: value, mspConfig: mspConfig, fabricConfig: fabricConfig}, nil
+}
+
+// encode writes the Fabric MSP config, with any change made to it, back through
+// the MSP config into the config value.
+func (d *decodedOrgMSP) encode() error {
+	content, err := helpers.DeterministicMarshal.Marshal(d.fabricConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal the Fabric MSP config")
 	}
-	return fabricConfig.GetName(), nil
+	d.mspConfig.Config = content
+	value, err := helpers.DeterministicMarshal.Marshal(d.mspConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal the MSP value")
+	}
+	d.configValue.Value = value
+	return nil
 }
 
 // loadPartyDefinition reads the party definition YAML at path. Its Party is the

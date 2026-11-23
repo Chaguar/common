@@ -33,6 +33,7 @@ const (
 	subNode          = "node"
 	subCA            = "ca"
 	subSet           = "set"
+	subNodeOUs       = "node-ous"
 
 	flagConfig       = "--config"
 	flagCurrentBlock = "--current-block"
@@ -414,6 +415,14 @@ func TestRunRoutesToHandler(t *testing.T) {
 			wantArgs:    []string{subSet, "1", cert2, nextBlock},
 		},
 		{
+			name: "modify party ca node-ous",
+			args: []string{
+				cmdModify, subParty, subCA, subNodeOUs, flagParty, "1", flagSignCert, cert1, flagBlock, nextBlock,
+			},
+			wantHandler: handlerPartyCA,
+			wantArgs:    []string{subNodeOUs, "1", cert1, nextBlock},
+		},
+		{
 			name:        "tx endorse",
 			args:        []string{"tx", "endorse", configUpdate, flagConfig, admin, flagOutput, fileEndorsement1},
 			wantHandler: "TxEndorse",
@@ -480,6 +489,8 @@ func TestParseErrors(t *testing.T) {
 	currBlock := writeTempFile(t, "current_block.pb")
 	currentJSON := writeTempFile(t, "current.json")
 	modifiedJSON := writeTempFile(t, "modified.json")
+	caCert := writeTempFile(t, "ca.pem")
+	tlsCACert := writeTempFile(t, "tlsca.pem")
 
 	for _, tc := range []struct {
 		name    string
@@ -563,6 +574,19 @@ func TestParseErrors(t *testing.T) {
 			name:    "modify party ca set without cert lists",
 			args:    []string{cmdModify, subParty, subCA, subSet, flagParty, "1", flagBlock, currBlock},
 			wantErr: errNoCALists,
+		},
+		{
+			name:    "modify party ca node-ous without a CA",
+			args:    []string{cmdModify, subParty, subCA, subNodeOUs, flagParty, "1", flagBlock, currBlock},
+			wantErr: "required flag(s) '--sign-cert' not provided",
+		},
+		{
+			name: "modify party ca node-ous with a TLS CA",
+			args: []string{
+				cmdModify, subParty, subCA, subNodeOUs, flagParty, "1",
+				flagSignCert, caCert, flagTLSCert, tlsCACert, flagBlock, currBlock,
+			},
+			wantErr: "unknown long flag '--tls-cert'",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
