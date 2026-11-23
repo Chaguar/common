@@ -25,6 +25,7 @@ import (
 	"github.com/Chaguar/common/api/ordererpb"
 	"github.com/Chaguar/common/api/types"
 	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/msp"
 	"github.com/Chaguar/common/protolator"
 	"github.com/Chaguar/common/protolator/protoext/ordererext"
 	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
@@ -433,6 +434,7 @@ type decodedOrgMSP struct {
 }
 
 // decodeOrgMSP decodes the org's MSP config value down to its Fabric MSP config.
+// It errors if the MSP is not a Fabric (X.509) MSP, such as an idemix MSP.
 func decodeOrgMSP(org *cb.ConfigGroup) (*decodedOrgMSP, error) {
 	value := org.GetValues()[channelconfig.MSPKey]
 	if value == nil {
@@ -441,6 +443,16 @@ func decodeOrgMSP(org *cb.ConfigGroup) (*decodedOrgMSP, error) {
 	mspConfig := &mspproto.MSPConfig{}
 	if err := proto.Unmarshal(value.GetValue(), mspConfig); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal the MSP value")
+	}
+	// The config of another MSP type, such as idemix, does not fail to decode
+	// as a Fabric MSP config: protobuf keeps the fields it does not match as
+	// unknown fields. So the type is checked first.
+	if mspType := msp.ProviderType(mspConfig.GetType()); mspType != msp.FABRIC {
+		name := msp.ProviderTypeToString(mspType)
+		if name == "" {
+			name = "unknown"
+		}
+		return nil, errors.Newf("the MSP is not a Fabric (X.509) MSP: its type is %d (%s)", mspType, name)
 	}
 	fabricConfig := &msppb.FabricMSPConfig{}
 	if err := proto.Unmarshal(mspConfig.GetConfig(), fabricConfig); err != nil {

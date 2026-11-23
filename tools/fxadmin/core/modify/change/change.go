@@ -21,10 +21,20 @@ type Node struct {
 	BlockPath string
 }
 
+// The operations of a known-certs request, as the `modify app|orderer
+// known-certs` sub-verbs name them. The CLI and the handler both use them, so
+// that they agree on the names.
+const (
+	KnownCertsOpAdd    = "add"
+	KnownCertsOpRemove = "remove"
+	KnownCertsOpSet    = "set"
+)
+
 // KnownCerts is a `modify app|orderer known-certs add|remove|set` request over
 // the known certificates of an org's MSP. Group is the config group of the org,
-// Application or Orderer, and Org the org's name in that group. Op is the
-// sub-verb.
+// channelconfig.ApplicationGroupKey or channelconfig.OrdererGroupKey, and Org
+// the org's name in that group. Op is the sub-verb, one of the KnownCertsOp
+// constants.
 type KnownCerts struct {
 	Op        string
 	Group     string

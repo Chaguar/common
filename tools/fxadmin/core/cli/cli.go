@@ -17,6 +17,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/cockroachdb/errors"
 
+	"github.com/Chaguar/common/common/channelconfig"
 	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
@@ -43,13 +44,6 @@ const (
 
 // roleBatcher is the --role value of a batcher, the only node role addressed by --shard.
 const roleBatcher = "batcher"
-
-// The config groups of the orgs whose known-certs `modify app|orderer
-// known-certs` changes, as the config block names them.
-const (
-	groupApplication = "Application"
-	groupOrderer     = "Orderer"
-)
 
 // CLI is the fxadmin command-line application. It owns the kingpin command
 // tree and a dispatch table mapping each command to a closure
@@ -331,7 +325,7 @@ func (c *CLI) addModifyAppCommands(modify *kingpin.CmdClause) {
 		return c.handlers.Modify.AppRemove(*removeOrg, *removeBlockFlag)
 	})
 
-	c.addModifyKnownCertsCommands(app, groupApplication)
+	c.addModifyKnownCertsCommands(app, channelconfig.ApplicationGroupKey)
 }
 
 // addModifyOrdererCommands wires `fxadmin modify orderer` (known-certs), which
@@ -339,14 +333,14 @@ func (c *CLI) addModifyAppCommands(modify *kingpin.CmdClause) {
 // by `fxadmin modify party`.
 func (c *CLI) addModifyOrdererCommands(modify *kingpin.CmdClause) {
 	orderer := modify.Command("orderer", "Change orderer organizations: their known-certs.")
-	c.addModifyKnownCertsCommands(orderer, groupOrderer)
+	c.addModifyKnownCertsCommands(orderer, channelconfig.OrdererGroupKey)
 }
 
 // addModifyKnownCertsCommands wires `fxadmin modify app|orderer known-certs
 // add|remove|set` over the known-certs list of an org of the given config group.
 func (c *CLI) addModifyKnownCertsCommands(parent *kingpin.CmdClause, group string) {
 	known := parent.Command("known-certs", "Change the known-certs list of an org's MSP in the "+group+" group.")
-	for _, op := range []string{"add", "remove", "set"} {
+	for _, op := range []string{change.KnownCertsOpAdd, change.KnownCertsOpRemove, change.KnownCertsOpSet} {
 		c.registerKnownCertsOp(known, group, op)
 	}
 }

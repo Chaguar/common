@@ -9,11 +9,15 @@ package modify_test
 import (
 	"encoding/pem"
 	"fmt"
+	"slices"
 	"testing"
 
+	mspproto "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/msp"
 	"github.com/Chaguar/common/protoutil"
 	"github.com/Chaguar/common/tools/cryptogen"
 	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
@@ -121,7 +125,9 @@ func TestKnownCertsRejects(t *testing.T) {
 	caPath := writeNodeTestFile(t, dir, "ca.pem", peerCA)
 	notPEMPath := writeNodeTestFile(t, dir, "not-pem.pem", []byte("not a certificate"))
 	copyPath := writeNodeTestFile(t, dir, "copy.pem", peerKnown[0])
+	bundlePath := writeNodeTestFile(t, dir, "bundle.pem", slices.Concat(peerKnown[0], peerKnown[1]))
 	withoutFirstBlock := withKnownTestCerts(t, baseBlock, peerOrg, peerKnown[1:])
+	idemixBlock := withKnownTestMSPType(t, baseBlock, peerOrg, int32(msp.IDEMIX))
 
 	for _, tc := range []struct {
 		name    string
@@ -161,6 +167,22 @@ func TestKnownCertsRejects(t *testing.T) {
 			name: "the same certificate twice", block: baseBlock, op: knownTestSet, org: peerOrg,
 			certs:   []string{peerPaths[0], copyPath},
 			wantErr: "hold the same certificate",
+		},
+		{
+			// Only the first certificate of a bundle would be read, and set would
+			// drop the others.
+			name: "a file of several certificates", block: baseBlock, op: knownTestSet, org: peerOrg,
+			certs: []string{bundlePath},
+			wantErr: `invalid known certificates: "` + bundlePath + `" holds more than one PEM block; ` +
+				"give each certificate in a file of its own",
+		},
+		{
+			// An idemix MSP config would decode as a Fabric one without an error,
+			// so the MSP type is checked first.
+			name: "an org whose MSP is not a Fabric MSP", block: idemixBlock, op: knownTestAdd, org: peerOrg,
+			certs: []string{peerPaths[0]},
+			wantErr: `Application org "peer-org-1": the MSP is not a Fabric (X.509) MSP: ` +
+				"its type is 1 (idemix)",
 		},
 		{
 			// The orderer org is not in the Application group: the tool assumes
@@ -244,6 +266,23 @@ func withKnownTestCerts(t *testing.T, marshaledBlock []byte, org knownTestOrg, c
 	fabricConfig := nodeTestFabricMSPConfig(t, group)
 	fabricConfig.KnownCerts = certs
 	setCATestFabricMSPConfig(t, group, fabricConfig)
+	require.NoError(t, configBlock.Encode())
+	return protoutil.MarshalOrPanic(configBlock.Block)
+}
+
+// withKnownTestMSPType returns the marshaled block with the type of the org's
+// MSP config set to mspType, and its config left as it is.
+func withKnownTestMSPType(t *testing.T, marshaledBlock []byte, org knownTestOrg, mspType int32) []byte {
+	t.Helper()
+	configBlock, err := helpers.UnmarshalAndDecodeConfigBlock(marshaledBlock)
+	require.NoError(t, err)
+	group := configBlock.Config().GetChannelGroup().GetGroups()[org.group].GetGroups()[org.name]
+	require.NotNil(t, group)
+	value := group.GetValues()[channelconfig.MSPKey]
+	mspConfig := &mspproto.MSPConfig{}
+	require.NoError(t, proto.Unmarshal(value.GetValue(), mspConfig))
+	mspConfig.Type = mspType
+	value.Value = protoutil.MarshalOrPanic(mspConfig)
 	require.NoError(t, configBlock.Encode())
 	return protoutil.MarshalOrPanic(configBlock.Block)
 }

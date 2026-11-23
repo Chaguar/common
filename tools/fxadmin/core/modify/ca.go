@@ -139,8 +139,8 @@ func readCACertificates(paths []string) ([]givenCertificate, error) {
 }
 
 // readGivenCertificates reads the certificate files at paths. Each must hold a
-// PEM-encoded X.509 certificate that passes check, and no certificate may be
-// given twice.
+// single PEM block, a PEM-encoded X.509 certificate that passes check, and no
+// certificate may be given twice.
 func readGivenCertificates(
 	paths []string, check func(path string, cert *x509.Certificate) error,
 ) ([]givenCertificate, error) {
@@ -148,6 +148,9 @@ func readGivenCertificates(
 	for _, path := range paths {
 		cert, content, err := parseCertificateFile(path)
 		if err != nil {
+			return nil, err
+		}
+		if err := requireOnePEMBlock(path); err != nil {
 			return nil, err
 		}
 		if err := check(path, cert); err != nil {
@@ -163,12 +166,8 @@ func readGivenCertificates(
 	return certs, nil
 }
 
-// requireCACertificate checks that the file at path holds a single CA
-// certificate: a file of several PEM blocks is rejected (see requireOnePEMBlock).
+// requireCACertificate checks that the certificate at path is a CA certificate.
 func requireCACertificate(path string, cert *x509.Certificate) error {
-	if err := requireOnePEMBlock(path); err != nil {
-		return err
-	}
 	if !cert.IsCA {
 		return errors.Newf("%q is not a CA certificate", path)
 	}
@@ -176,9 +175,9 @@ func requireCACertificate(path string, cert *x509.Certificate) error {
 }
 
 // requireOnePEMBlock checks that the file at path holds a single PEM block. A
-// file of several, such as a CA chain or a bundle of the old and the new CA, is
-// rejected rather than read in part: only its first certificate would be kept,
-// and the others dropped without notice.
+// file of several, such as a CA chain, a bundle of the old and the new CA, or a
+// bundle of known certificates, is rejected rather than read in part: only its
+// first certificate would be kept, and the others dropped without notice.
 func requireOnePEMBlock(path string) error {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -186,7 +185,7 @@ func requireOnePEMBlock(path string) error {
 	}
 	_, rest := pem.Decode(content)
 	if next, _ := pem.Decode(rest); next != nil {
-		return errors.Newf("%q holds more than one PEM block; give each CA certificate in a file of its own", path)
+		return errors.Newf("%q holds more than one PEM block; give each certificate in a file of its own", path)
 	}
 	return nil
 }

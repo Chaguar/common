@@ -17,14 +17,6 @@ import (
 	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
-// The operations of `modify app|orderer known-certs`, as its sub-verbs name
-// them.
-const (
-	knownCertsAdd    = "add"
-	knownCertsRemove = "remove"
-	knownCertsSet    = "set"
-)
-
 // KnownCerts implements `fxadmin modify app|orderer known-certs add|remove|set`.
 // It changes the known certificates (known_certs) of the Fabric MSP of one org:
 // the org named Org in the request's Group, Application or Orderer. A client
@@ -80,9 +72,9 @@ func (*Handler) KnownCerts(ch change.KnownCerts) error {
 // certificate files. Each must hold a PEM-encoded X.509 certificate of an
 // identity, not of a CA, as the MSP accepts no CA certificate as an identity.
 func readKnownCertsChange(ch change.KnownCerts) ([]givenCertificate, error) {
-	if !slices.Contains([]string{knownCertsAdd, knownCertsRemove, knownCertsSet}, ch.Op) {
+	if !slices.Contains([]string{change.KnownCertsOpAdd, change.KnownCertsOpRemove, change.KnownCertsOpSet}, ch.Op) {
 		return nil, errors.Newf("unknown operation %q: want %q, %q or %q",
-			ch.Op, knownCertsAdd, knownCertsRemove, knownCertsSet)
+			ch.Op, change.KnownCertsOpAdd, change.KnownCertsOpRemove, change.KnownCertsOpSet)
 	}
 	if ch.Group != channelconfig.ApplicationGroupKey && ch.Group != channelconfig.OrdererGroupKey {
 		return nil, errors.Newf("unknown group %q: want %q or %q",
@@ -116,7 +108,7 @@ func rejectCACertificate(path string, cert *x509.Certificate) error {
 //     given.
 func changeKnownCerts(op string, known *[][]byte, certs []givenCertificate) error {
 	switch op {
-	case knownCertsAdd:
+	case change.KnownCertsOpAdd:
 		for _, cert := range certs {
 			if containsCertificate(*known, cert.pem) {
 				logger.Infof("the known certificates already hold the certificate of %q; it is not added again",
@@ -126,7 +118,7 @@ func changeKnownCerts(op string, known *[][]byte, certs []givenCertificate) erro
 			*known = append(*known, cert.pem)
 		}
 		return nil
-	case knownCertsRemove:
+	case change.KnownCertsOpRemove:
 		for _, cert := range certs {
 			if !containsCertificate(*known, cert.pem) {
 				return errors.Newf("the known certificates do not hold the certificate of %q", cert.path)
@@ -134,7 +126,7 @@ func changeKnownCerts(op string, known *[][]byte, certs []givenCertificate) erro
 		}
 		*known = withoutCertificates(*known, certs)
 		return nil
-	case knownCertsSet:
+	case change.KnownCertsOpSet:
 		pems := make([][]byte, 0, len(certs))
 		for _, cert := range certs {
 			pems = append(pems, cert.pem)

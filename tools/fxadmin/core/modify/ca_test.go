@@ -384,7 +384,7 @@ func TestPartyCARejects(t *testing.T) {
 			name: "a file of several certificates", block: baseBlock, op: caTestSet, party: nodeTestParty,
 			signCerts: []string{bundlePath},
 			wantErr: `"` + bundlePath + `" holds more than one PEM block; ` +
-				"give each CA certificate in a file of its own",
+				"give each certificate in a file of its own",
 		},
 		{
 			name: "an unknown party", block: baseBlock, op: caTestAdd, party: nodeTestParty + 1,
