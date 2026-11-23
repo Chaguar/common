@@ -21,6 +21,7 @@ import (
 	"go.yaml.in/yaml/v3"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/Chaguar/common/api/msppb"
 	"github.com/Chaguar/common/api/ordererpb"
 	"github.com/Chaguar/common/api/types"
 	"github.com/Chaguar/common/common/channelconfig"
@@ -428,7 +429,7 @@ func orgMSPID(org *cb.ConfigGroup) (string, error) {
 type decodedOrgMSP struct {
 	configValue  *cb.ConfigValue
 	mspConfig    *mspproto.MSPConfig
-	fabricConfig *mspproto.FabricMSPConfig
+	fabricConfig *msppb.FabricMSPConfig
 }
 
 // decodeOrgMSP decodes the org's MSP config value down to its Fabric MSP config.
@@ -441,7 +442,7 @@ func decodeOrgMSP(org *cb.ConfigGroup) (*decodedOrgMSP, error) {
 	if err := proto.Unmarshal(value.GetValue(), mspConfig); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal the MSP value")
 	}
-	fabricConfig := &mspproto.FabricMSPConfig{}
+	fabricConfig := &msppb.FabricMSPConfig{}
 	if err := proto.Unmarshal(mspConfig.GetConfig(), fabricConfig); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal the Fabric MSP config")
 	}

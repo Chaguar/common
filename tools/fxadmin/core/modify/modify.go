@@ -52,18 +52,6 @@ func (*Handler) AppRemove(org, blockPath string) error {
 	return ErrNotImplemented
 }
 
-// AppKnownCertsAdd implements `fxadmin modify app known-certs add`.
-func (*Handler) AppKnownCertsAdd(org string, certPaths []string, blockPath string) error {
-	logger.Debugf("modify app known-certs add: org=%s certs=%v block=%s (not implemented)", org, certPaths, blockPath)
-	return ErrNotImplemented
-}
-
-// AppKnownCertsRemove implements `fxadmin modify app known-certs remove`.
-func (*Handler) AppKnownCertsRemove(org string, certPaths []string, blockPath string) error {
-	logger.Debugf("modify app known-certs remove: org=%s certs=%v block=%s (not impl.)", org, certPaths, blockPath)
-	return ErrNotImplemented
-}
-
 // readAndDecodeConfigBlock reads the config block file at path and decodes it
 // down to its config.
 func readAndDecodeConfigBlock(path string) (*helpers.ConfigBlock, error) {

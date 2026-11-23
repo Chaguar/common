@@ -411,7 +411,7 @@ func TestPartyCARejects(t *testing.T) {
 			// the old CA issued, so it rejects a CA list without the old CA.
 			name: "setting a CA that did not issue the org's admins", block: baseBlock, op: caTestSet,
 			party: nodeTestParty, signCerts: []string{certs.newCAPath},
-			wantErr: "the supplied identity is not valid: x509: certificate signed by unknown authority",
+			wantErr: errUnknownAuthority,
 		},
 		{
 			// The node OUs already pin the new CA, but the org's MSP still lists
@@ -419,7 +419,7 @@ func TestPartyCARejects(t *testing.T) {
 			// list without the old CA.
 			name: "setting a CA that did not issue the org's known certificates", block: nodeOUsMovedBlock,
 			op: caTestSet, party: nodeTestParty, signCerts: []string{nodeOUsCerts.newCAPath},
-			wantErr: "the supplied identity is not valid: x509: certificate signed by unknown authority",
+			wantErr: errUnknownAuthority,
 		},
 		{
 			// Only node-ous moves the node OUs, so set may not drop the CA they
@@ -464,9 +464,9 @@ func TestPartyCARejects(t *testing.T) {
 			wantErr:   "the MSP has no node OUs that pin a CA",
 		},
 		{
-			name: "a non-config block", block: []byte("not a block"), op: caTestAdd, party: nodeTestParty,
+			name: nonConfigBlockCase, block: []byte("not a block"), op: caTestAdd, party: nodeTestParty,
 			signCerts: []string{certs.newCAPath},
-			wantErr:   "failed to unmarshal config block",
+			wantErr:   errNotConfigBlock,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

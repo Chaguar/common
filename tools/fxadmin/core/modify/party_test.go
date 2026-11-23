@@ -56,6 +56,13 @@ const (
 	tlsCertField    = "server_tls_cert"
 	// testChannelID is the channel of the config blocks the tests generate.
 	testChannelID = "mychannel"
+	// nonConfigBlockCase names the case of a block file that is not a config
+	// block, and errNotConfigBlock is its error.
+	nonConfigBlockCase = "a non-config block"
+	errNotConfigBlock  = "failed to unmarshal config block"
+	// errUnknownAuthority is the error of an identity that no CA of the MSP
+	// issued.
+	errUnknownAuthority = "the supplied identity is not valid: x509: certificate signed by unknown authority"
 )
 
 // TestPartyAdd adds a party and its orderer org from a party definition, and
@@ -546,7 +553,7 @@ func TestPartyAddRejectsNonConfigBlock(t *testing.T) {
 	partyPath := writePartyDefinition(t, definitionDir, definition)
 
 	err := modify.New().PartyAdd(partyPath, blockPath)
-	require.ErrorContains(t, err, "failed to unmarshal config block")
+	require.ErrorContains(t, err, errNotConfigBlock)
 	requireArmaBlockUnchanged(t, blockPath, notABlock)
 }
 

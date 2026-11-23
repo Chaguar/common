@@ -34,6 +34,8 @@ const (
 	subCA            = "ca"
 	subSet           = "set"
 	subNodeOUs       = "node-ous"
+	subKnownCerts    = "known-certs"
+	subOrderer       = "orderer"
 
 	flagConfig       = "--config"
 	flagCurrentBlock = "--current-block"
@@ -50,6 +52,7 @@ const (
 
 	refLatest   = "latest"
 	orgPeer1    = "peer1"
+	orgOrderer1 = "org1"
 	roleBatcher = "batcher"
 	roleRouter  = "router"
 
@@ -63,8 +66,12 @@ const (
 	errNoCALists = "at least one of --sign-cert or --tls-cert is required"
 	errPortRange = "--port must be between 1 and 65535"
 
-	handlerPartyNode = "ModifyPartyNode"
-	handlerPartyCA   = "ModifyPartyCA"
+	handlerPartyNode  = "ModifyPartyNode"
+	handlerPartyCA    = "ModifyPartyCA"
+	handlerKnownCerts = "ModifyKnownCerts"
+	// The config groups that `modify app|orderer known-certs` pass to the handler.
+	groupApplication = "Application"
+	groupOrderer     = "Orderer"
 )
 
 // call records the handler that was invoked and the values it received, so a
@@ -177,23 +184,14 @@ func (f fakeModify) AppRemove(org, blockPath string) error {
 	return nil
 }
 
-func (f fakeModify) AppKnownCertsAdd(org string, certPaths []string, blockPath string) error {
-	*f.invoked = certCall("ModifyAppKnownCertsAdd", org, certPaths, blockPath)
+// KnownCerts records a known-certs invocation as {op, group, org, certs…, block}.
+func (f fakeModify) KnownCerts(ch change.KnownCerts) error {
+	args := make([]string, 0, len(ch.Certs)+4)
+	args = append(args, ch.Op, ch.Group, ch.Org)
+	args = append(args, ch.Certs...)
+	args = append(args, ch.BlockPath)
+	*f.invoked = call{handler: handlerKnownCerts, args: args}
 	return nil
-}
-
-func (f fakeModify) AppKnownCertsRemove(org string, certPaths []string, blockPath string) error {
-	*f.invoked = certCall("ModifyAppKnownCertsRemove", org, certPaths, blockPath)
-	return nil
-}
-
-// certCall records a known-certs invocation as {org, certPaths…, blockPath}.
-func certCall(handler, org string, certPaths []string, blockPath string) call {
-	args := make([]string, 0, len(certPaths)+2)
-	args = append(args, org)
-	args = append(args, certPaths...)
-	args = append(args, blockPath)
-	return call{handler: handler, args: args}
 }
 
 func (f fakeModify) PartyAdd(partyPath, blockPath string) error {
@@ -333,19 +331,54 @@ func TestRunRoutesToHandler(t *testing.T) {
 		{
 			name: "modify app known-certs add",
 			args: []string{
-				cmdModify, subApp, "known-certs", subAdd, flagOrg, orgPeer1,
+				cmdModify, subApp, subKnownCerts, subAdd, flagOrg, orgPeer1,
 				flagCert, cert1, flagCert, cert2, flagBlock, nextBlock,
 			},
-			wantHandler: "ModifyAppKnownCertsAdd",
-			wantArgs:    []string{orgPeer1, cert1, cert2, nextBlock},
+			wantHandler: handlerKnownCerts,
+			wantArgs:    []string{subAdd, groupApplication, orgPeer1, cert1, cert2, nextBlock},
 		},
 		{
 			name: "modify app known-certs remove",
 			args: []string{
-				cmdModify, subApp, "known-certs", subRemove, flagOrg, orgPeer1, flagCert, cert1, flagBlock, nextBlock,
+				cmdModify, subApp, subKnownCerts, subRemove, flagOrg, orgPeer1, flagCert, cert1, flagBlock, nextBlock,
 			},
-			wantHandler: "ModifyAppKnownCertsRemove",
-			wantArgs:    []string{orgPeer1, cert1, nextBlock},
+			wantHandler: handlerKnownCerts,
+			wantArgs:    []string{subRemove, groupApplication, orgPeer1, cert1, nextBlock},
+		},
+		{
+			name: "modify app known-certs set",
+			args: []string{
+				cmdModify, subApp, subKnownCerts, subSet, flagOrg, orgPeer1, flagCert, cert1, flagBlock, nextBlock,
+			},
+			wantHandler: handlerKnownCerts,
+			wantArgs:    []string{subSet, groupApplication, orgPeer1, cert1, nextBlock},
+		},
+		{
+			name: "modify orderer known-certs add",
+			args: []string{
+				cmdModify, subOrderer, subKnownCerts, subAdd, flagOrg, orgOrderer1,
+				flagCert, cert1, flagCert, cert2, flagBlock, nextBlock,
+			},
+			wantHandler: handlerKnownCerts,
+			wantArgs:    []string{subAdd, groupOrderer, orgOrderer1, cert1, cert2, nextBlock},
+		},
+		{
+			name: "modify orderer known-certs remove",
+			args: []string{
+				cmdModify, subOrderer, subKnownCerts, subRemove, flagOrg, orgOrderer1,
+				flagCert, cert1, flagBlock, nextBlock,
+			},
+			wantHandler: handlerKnownCerts,
+			wantArgs:    []string{subRemove, groupOrderer, orgOrderer1, cert1, nextBlock},
+		},
+		{
+			name: "modify orderer known-certs set",
+			args: []string{
+				cmdModify, subOrderer, subKnownCerts, subSet, flagOrg, orgOrderer1,
+				flagCert, cert1, flagBlock, nextBlock,
+			},
+			wantHandler: handlerKnownCerts,
+			wantArgs:    []string{subSet, groupOrderer, orgOrderer1, cert1, nextBlock},
 		},
 		{
 			name:        "modify party add",

@@ -46,8 +46,7 @@ type UpdateHandler interface {
 type ModifyHandler interface {
 	AppAdd(orgPath, blockPath string) error
 	AppRemove(org, blockPath string) error
-	AppKnownCertsAdd(org string, certPaths []string, blockPath string) error
-	AppKnownCertsRemove(org string, certPaths []string, blockPath string) error
+	KnownCerts(ch change.KnownCerts) error
 	PartyAdd(partyPath, blockPath string) error
 	PartyRemove(partyID uint32, blockPath string) error
 	PartyNode(ch change.Node) error

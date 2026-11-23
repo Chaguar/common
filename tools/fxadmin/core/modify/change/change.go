@@ -21,6 +21,18 @@ type Node struct {
 	BlockPath string
 }
 
+// KnownCerts is a `modify app|orderer known-certs add|remove|set` request over
+// the known certificates of an org's MSP. Group is the config group of the org,
+// Application or Orderer, and Org the org's name in that group. Op is the
+// sub-verb.
+type KnownCerts struct {
+	Op        string
+	Group     string
+	Org       string
+	Certs     []string
+	BlockPath string
+}
+
 // The operations of a CA request, as the `modify party ca` sub-verbs name them.
 // The CLI and the handler both use them, so that they agree on the names.
 const (
