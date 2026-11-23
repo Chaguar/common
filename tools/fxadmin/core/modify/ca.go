@@ -11,6 +11,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"os"
 	"slices"
 
 	"github.com/cockroachdb/errors"
@@ -20,14 +21,6 @@ import (
 	"github.com/Chaguar/common/api/ordererpb"
 	"github.com/Chaguar/common/common/channelconfig"
 	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
-)
-
-// The operations of `modify party ca`, as its sub-verbs name them.
-const (
-	caOpAdd     = "add"
-	caOpRemove  = "remove"
-	caOpSet     = "set"
-	caOpNodeOUs = "node-ous"
 )
 
 // caCertificate is a certificate of a `modify party ca` request: the path of
@@ -116,16 +109,16 @@ func (*Handler) PartyCA(ch change.CA) error {
 // readCAChange checks the request's operation and that it gives at least one
 // certificate, and reads its certificate files.
 func readCAChange(ch change.CA) (*caChange, error) {
-	if !slices.Contains([]string{caOpAdd, caOpRemove, caOpSet, caOpNodeOUs}, ch.Op) {
+	if !slices.Contains([]string{change.CAOpAdd, change.CAOpRemove, change.CAOpSet, change.CAOpNodeOUs}, ch.Op) {
 		return nil, errors.Newf("unknown operation %q: want %q, %q, %q or %q",
-			ch.Op, caOpAdd, caOpRemove, caOpSet, caOpNodeOUs)
+			ch.Op, change.CAOpAdd, change.CAOpRemove, change.CAOpSet, change.CAOpNodeOUs)
 	}
 	if len(ch.SignCerts) == 0 && len(ch.TLSCerts) == 0 {
 		return nil, errors.New("nothing to change: no CA or TLS CA certificate is given")
 	}
 	// A node OU pins a single signing CA.
-	if ch.Op == caOpNodeOUs && (len(ch.SignCerts) != 1 || len(ch.TLSCerts) != 0) {
-		return nil, errors.Newf("%s takes exactly one CA certificate, and no TLS CA certificate", caOpNodeOUs)
+	if ch.Op == change.CAOpNodeOUs && (len(ch.SignCerts) != 1 || len(ch.TLSCerts) != 0) {
+		return nil, errors.Newf("%s takes exactly one CA certificate, and no TLS CA certificate", change.CAOpNodeOUs)
 	}
 	signCerts, err := readCACertificates(ch.SignCerts)
 	if err != nil {
@@ -147,6 +140,9 @@ func readCACertificates(paths []string) ([]caCertificate, error) {
 		if err != nil {
 			return nil, err
 		}
+		if err := requireOnePEMBlock(path); err != nil {
+			return nil, err
+		}
 		if !cert.IsCA {
 			return nil, errors.Newf("%q is not a CA certificate", path)
 		}
@@ -158,6 +154,22 @@ func readCACertificates(paths []string) ([]caCertificate, error) {
 		certs = append(certs, caCertificate{path: path, pem: content})
 	}
 	return certs, nil
+}
+
+// requireOnePEMBlock checks that the file at path holds a single PEM block. A
+// file of several, such as a CA chain or a bundle of the old and the new CA, is
+// rejected rather than read in part: only its first certificate would be kept,
+// and the others dropped without notice.
+func requireOnePEMBlock(path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read certificate %q", path)
+	}
+	_, rest := pem.Decode(content)
+	if next, _ := pem.Decode(rest); next != nil {
+		return errors.Newf("%q holds more than one PEM block; give each CA certificate in a file of its own", path)
+	}
+	return nil
 }
 
 // ordererOrgParties is an orderer org and the parties it runs: the parties
@@ -223,7 +235,7 @@ func changePartyCAs(orderer *cb.ConfigGroup, cc *caChange) (*ordererOrgParties, 
 //   - add, remove and set change the lists and leave the node OUs as they are,
 //     so they may not drop the CA the node OUs pin.
 func applyCAChange(cc *caChange, caCerts, tlsCACerts caList, fabricConfig *mspproto.FabricMSPConfig) error {
-	if cc.op == caOpNodeOUs {
+	if cc.op == change.CAOpNodeOUs {
 		return moveNodeOUs(caCerts, fabricConfig, cc.signCerts[0])
 	}
 	if err := changeCAList(cc.op, caCerts, cc.signCerts); err != nil {
@@ -232,17 +244,22 @@ func applyCAChange(cc *caChange, caCerts, tlsCACerts caList, fabricConfig *msppr
 	if err := changeCAList(cc.op, tlsCACerts, cc.tlsCerts); err != nil {
 		return err
 	}
+	// Only a change of the signing-CA list can drop the CA the node OUs pin.
+	if len(cc.signCerts) == 0 {
+		return nil
+	}
 	return validateNodeOUPins(fabricConfig)
 }
 
 // validateNodeOUPins checks that each CA the MSP's node OUs pin is one of the
-// MSP's root certificates, as the MSP requires. add, remove and set change the
-// root certificates but not the node OUs, so a change that drops the pinned CA
-// is rejected with what to do instead: move the node OUs with node-ous first.
+// MSP's root or intermediate certificates, as the MSP requires. add, remove and
+// set change the root certificates but not the node OUs, so a change that drops
+// the pinned CA is rejected with what to do instead: move the node OUs with
+// node-ous first.
 func validateNodeOUPins(fabricConfig *mspproto.FabricMSPConfig) error {
 	for _, identifier := range nodeOUIdentifiers(fabricConfig) {
 		pinned := identifier.GetCertificate()
-		if len(pinned) > 0 && !containsCertificate(fabricConfig.GetRootCerts(), pinned) {
+		if len(pinned) > 0 && !mspHoldsCA(fabricConfig, pinned) {
 			return errors.Newf("the node OUs pin the CA %q, which is not in the CA list; "+
 				"first point them at a CA of the list, with `fxadmin modify party ca node-ous`",
 				certificateSubject(pinned))
@@ -251,9 +268,19 @@ func validateNodeOUPins(fabricConfig *mspproto.FabricMSPConfig) error {
 	return nil
 }
 
+// mspHoldsCA reports whether the CA is one of the MSP's root or intermediate
+// certificates, the CAs a node OU may pin.
+func mspHoldsCA(fabricConfig *mspproto.FabricMSPConfig, cert []byte) bool {
+	return containsCertificate(fabricConfig.GetRootCerts(), cert) ||
+		containsCertificate(fabricConfig.GetIntermediateCerts(), cert)
+}
+
 // moveNodeOUs points the node OUs of the org MSP at the CA. The MSP requires
-// the CA a node OU pins to be one of its root certificates, so the CA must be in
-// each party's CA list, and the MSP must have node OUs that pin a CA.
+// the CA a node OU pins to be one of its root or intermediate certificates, so
+// the CA must be in each party's CA list and in the MSP, and the MSP must have
+// node OUs that pin a CA. The MSP checks the pins even when its node OUs are
+// not enabled, so the pins are moved then too, with a warning that they do not
+// classify identities.
 func moveNodeOUs(list caList, fabricConfig *mspproto.FabricMSPConfig, cert caCertificate) error {
 	for _, party := range list.parties {
 		if !containsCertificate(*party.certs, cert.pem) {
@@ -261,8 +288,16 @@ func moveNodeOUs(list caList, fabricConfig *mspproto.FabricMSPConfig, cert caCer
 				list.name, party.party, cert.path)
 		}
 	}
+	if !mspHoldsCA(fabricConfig, cert.pem) {
+		return errors.Newf("the root and intermediate certificates of the MSP do not hold the certificate of %q",
+			cert.path)
+	}
 	if retargetNodeOUs(fabricConfig, cert.pem) == 0 {
 		return errors.New("the MSP has no node OUs that pin a CA")
+	}
+	if !fabricConfig.GetFabricNodeOus().GetEnable() {
+		logger.Warnf("the node OUs of the MSP are not enabled: their pins are moved, "+
+			"but they do not classify identities until node OUs are enabled; certificate %q", cert.path)
 	}
 	return nil
 }
@@ -311,12 +346,12 @@ func changeCAList(op string, list caList, certs []caCertificate) error {
 		return nil
 	}
 	switch op {
-	case caOpAdd:
+	case change.CAOpAdd:
 		addCertificates(list, certs)
 		return nil
-	case caOpRemove:
+	case change.CAOpRemove:
 		return removeCertificates(list, certs)
-	case caOpSet:
+	case change.CAOpSet:
 		pems := make([][]byte, 0, len(certs))
 		for _, cert := range certs {
 			pems = append(pems, cert.pem)

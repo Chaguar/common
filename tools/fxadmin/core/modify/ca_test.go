@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package modify_test
 
 import (
+	"slices"
 	"testing"
 
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
@@ -18,6 +19,7 @@ import (
 	"github.com/Chaguar/common/api/msppb"
 	"github.com/Chaguar/common/api/ordererpb"
 	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/common/crypto/tlsgen"
 	"github.com/Chaguar/common/protoutil"
 	"github.com/Chaguar/common/tools/cryptogen"
 	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
@@ -237,6 +239,14 @@ func TestPartyCANodeOUs(t *testing.T) {
 	movedBlock := withCATestNodeOUsPin(t,
 		withCATestOrgLists(t, baseBlock, nodeTestOrg, caTestLists{caCerts: [][]byte{certs.oldCA, certs.newCA}}),
 		nodeTestOrg, certs.newCA)
+	// intermediateBlock trusts the old CA and another root CA, and its node OUs
+	// pin an intermediate CA of that root, as the MSP allows.
+	root, intermediate := newCATestIntermediateCA(t)
+	intermediateBlock := withCATestNodeOUsPin(t,
+		withCATestMSPCerts(t,
+			withCATestOrgLists(t, baseBlock, nodeTestOrg, caTestLists{caCerts: [][]byte{certs.oldCA, root}}),
+			nodeTestOrg, caTestMSPCerts{intermediateCerts: [][]byte{intermediate}}),
+		nodeTestOrg, intermediate)
 
 	for _, tc := range []struct {
 		name        string
@@ -282,6 +292,18 @@ func TestPartyCANodeOUs(t *testing.T) {
 			name: "set the TLS CA list", block: baseBlock, op: caTestSet, tlsCerts: []string{certs.newTLSCAPath},
 			want: caTestLists{caCerts: [][]byte{certs.oldCA}, tlsCACerts: [][]byte{certs.newTLSCA}},
 		},
+		{
+			name: "add a CA while the node OUs pin an intermediate CA", block: intermediateBlock, op: caTestAdd,
+			signCerts: []string{certs.newCAPath},
+			want: caTestLists{
+				caCerts: [][]byte{certs.oldCA, root, certs.newCA}, tlsCACerts: [][]byte{certs.oldTLSCA},
+			},
+		},
+		{
+			name: "set the TLS CA list while the node OUs pin an intermediate CA", block: intermediateBlock,
+			op: caTestSet, tlsCerts: []string{certs.newTLSCAPath},
+			want: caTestLists{caCerts: [][]byte{certs.oldCA, root}, tlsCACerts: [][]byte{certs.newTLSCA}},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -313,10 +335,15 @@ func TestPartyCARejects(t *testing.T) {
 	// CA, and its known certificates are still the old CA's.
 	nodeOUsMovedBlock := withCATestNodeOUsPin(t, withCATestOrgLists(t, nodeOUsBlock, nodeTestOrg,
 		caTestLists{caCerts: [][]byte{nodeOUsCerts.oldCA, nodeOUsCerts.newCA}}), nodeTestOrg, nodeOUsCerts.newCA)
+	// nodeOUsDivergedBlock lists the new CA in the party's CA list but not in
+	// its org MSP's root certificates.
+	nodeOUsDivergedBlock := withCATestMSPCerts(t, nodeOUsTwoCAsBlock, nodeTestOrg,
+		caTestMSPCerts{rootCerts: [][]byte{nodeOUsCerts.oldCA}})
 	dir := t.TempDir()
 	notPEMPath := writeNodeTestFile(t, dir, "not-pem.pem", []byte("not a certificate"))
 	nodeCertPath := writeNodeTestFile(t, dir, "node.pem", material.newSignCert)
 	oldCACopyPath := writeNodeTestFile(t, dir, "old-ca-copy.pem", certs.oldCA)
+	bundlePath := writeNodeTestFile(t, dir, "bundle.pem", slices.Concat(certs.oldCA, certs.newCA))
 
 	for _, tc := range []struct {
 		name      string
@@ -350,6 +377,14 @@ func TestPartyCARejects(t *testing.T) {
 			name: "the same certificate twice", block: baseBlock, op: caTestSet, party: nodeTestParty,
 			signCerts: []string{certs.oldCAPath, oldCACopyPath},
 			wantErr:   "hold the same certificate",
+		},
+		{
+			// Only the first certificate of a bundle would be read, and set would
+			// drop the others.
+			name: "a file of several certificates", block: baseBlock, op: caTestSet, party: nodeTestParty,
+			signCerts: []string{bundlePath},
+			wantErr: `"` + bundlePath + `" holds more than one PEM block; ` +
+				"give each CA certificate in a file of its own",
 		},
 		{
 			name: "an unknown party", block: baseBlock, op: caTestAdd, party: nodeTestParty + 1,
@@ -415,6 +450,13 @@ func TestPartyCARejects(t *testing.T) {
 			party: nodeTestParty, signCerts: []string{nodeOUsCerts.newCAPath},
 			wantErr: `orderer org "orderer-org-1": the CA list of party 1 does not hold the certificate of "` +
 				nodeOUsCerts.newCAPath + `"`,
+		},
+		{
+			// The party's CA list holds the CA, but the org MSP does not.
+			name: "node-ous with a CA the MSP does not hold", block: nodeOUsDivergedBlock, op: caTestNodeOUs,
+			party: nodeTestParty, signCerts: []string{nodeOUsCerts.newCAPath},
+			wantErr: `orderer org "orderer-org-1": the root and intermediate certificates of the MSP ` +
+				`do not hold the certificate of "` + nodeOUsCerts.newCAPath + `"`,
 		},
 		{
 			name: "node-ous on an MSP without node OUs", block: baseBlock, op: caTestNodeOUs, party: nodeTestParty,
@@ -555,6 +597,43 @@ func withCATestNodeOUsPin(t *testing.T, marshaledBlock []byte, org string, cert 
 	setCATestFabricMSPConfig(t, group, fabricConfig)
 	require.NoError(t, configBlock.Encode())
 	return protoutil.MarshalOrPanic(configBlock.Block)
+}
+
+// caTestMSPCerts are certificate lists to set in an org's MSP alone, not in its
+// parties' shared config entries. A nil list is left as the block has it.
+type caTestMSPCerts struct {
+	rootCerts, intermediateCerts [][]byte
+}
+
+// withCATestMSPCerts returns the marshaled block with the org's MSP holding the
+// given root and intermediate certificates.
+func withCATestMSPCerts(t *testing.T, marshaledBlock []byte, org string, certs caTestMSPCerts) []byte {
+	t.Helper()
+	configBlock, err := helpers.UnmarshalAndDecodeConfigBlock(marshaledBlock)
+	require.NoError(t, err)
+	group := configBlock.Config().GetChannelGroup().GetGroups()[channelconfig.OrdererGroupKey].GetGroups()[org]
+	require.NotNil(t, group)
+	fabricConfig := nodeTestFabricMSPConfig(t, group)
+	if certs.rootCerts != nil {
+		fabricConfig.RootCerts = certs.rootCerts
+	}
+	if certs.intermediateCerts != nil {
+		fabricConfig.IntermediateCerts = certs.intermediateCerts
+	}
+	setCATestFabricMSPConfig(t, group, fabricConfig)
+	require.NoError(t, configBlock.Encode())
+	return protoutil.MarshalOrPanic(configBlock.Block)
+}
+
+// newCATestIntermediateCA returns a root CA certificate and the certificate of
+// an intermediate CA it issued, both PEM-encoded.
+func newCATestIntermediateCA(t *testing.T) (root, intermediate []byte) {
+	t.Helper()
+	rootCA, err := tlsgen.NewCA()
+	require.NoError(t, err)
+	intermediateCA, err := rootCA.NewIntermediateCA()
+	require.NoError(t, err)
+	return rootCA.CertBytes(), intermediateCA.CertBytes()
 }
 
 // withCATestOrgLists returns the marshaled block with the CA and TLS CA lists
