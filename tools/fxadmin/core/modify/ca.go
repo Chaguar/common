@@ -18,15 +18,16 @@ import (
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
 	mspproto "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 
+	"github.com/Chaguar/common/api/msppb"
 	"github.com/Chaguar/common/api/ordererpb"
 	"github.com/Chaguar/common/common/channelconfig"
 	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
-// caCertificate is a certificate of a `modify party ca` request: the path of
-// the file it was read from, for messages, and the certificate, PEM-encoded as
-// the block stores it.
-type caCertificate struct {
+// givenCertificate is a certificate given to a modify command, such as `party
+// ca` or `known-certs`: the path of the file it was read from, for messages,
+// and the certificate, PEM-encoded as the block stores it.
+type givenCertificate struct {
 	path string
 	pem  []byte
 }
@@ -37,8 +38,8 @@ type caCertificate struct {
 type caChange struct {
 	op        string
 	party     uint32
-	signCerts []caCertificate
-	tlsCerts  []caCertificate
+	signCerts []givenCertificate
+	tlsCerts  []givenCertificate
 }
 
 // caList is one of the CA lists of an orderer org's parties, in each place of
@@ -133,8 +134,17 @@ func readCAChange(ch change.CA) (*caChange, error) {
 
 // readCACertificates reads the certificate files at paths. Each must hold a
 // PEM-encoded X.509 CA certificate, and no certificate may be given twice.
-func readCACertificates(paths []string) ([]caCertificate, error) {
-	certs := make([]caCertificate, 0, len(paths))
+func readCACertificates(paths []string) ([]givenCertificate, error) {
+	return readGivenCertificates(paths, requireCACertificate)
+}
+
+// readGivenCertificates reads the certificate files at paths. Each must hold a
+// single PEM block, a PEM-encoded X.509 certificate that passes check, and no
+// certificate may be given twice.
+func readGivenCertificates(
+	paths []string, check func(path string, cert *x509.Certificate) error,
+) ([]givenCertificate, error) {
+	certs := make([]givenCertificate, 0, len(paths))
 	for _, path := range paths {
 		cert, content, err := parseCertificateFile(path)
 		if err != nil {
@@ -143,23 +153,31 @@ func readCACertificates(paths []string) ([]caCertificate, error) {
 		if err := requireOnePEMBlock(path); err != nil {
 			return nil, err
 		}
-		if !cert.IsCA {
-			return nil, errors.Newf("%q is not a CA certificate", path)
+		if err := check(path, cert); err != nil {
+			return nil, err
 		}
 		for _, given := range certs {
 			if sameCertificate(given.pem, content) {
 				return nil, errors.Newf("%q and %q hold the same certificate", given.path, path)
 			}
 		}
-		certs = append(certs, caCertificate{path: path, pem: content})
+		certs = append(certs, givenCertificate{path: path, pem: content})
 	}
 	return certs, nil
 }
 
+// requireCACertificate checks that the certificate at path is a CA certificate.
+func requireCACertificate(path string, cert *x509.Certificate) error {
+	if !cert.IsCA {
+		return errors.Newf("%q is not a CA certificate", path)
+	}
+	return nil
+}
+
 // requireOnePEMBlock checks that the file at path holds a single PEM block. A
-// file of several, such as a CA chain or a bundle of the old and the new CA, is
-// rejected rather than read in part: only its first certificate would be kept,
-// and the others dropped without notice.
+// file of several, such as a CA chain, a bundle of the old and the new CA, or a
+// bundle of known certificates, is rejected rather than read in part: only its
+// first certificate would be kept, and the others dropped without notice.
 func requireOnePEMBlock(path string) error {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -167,7 +185,7 @@ func requireOnePEMBlock(path string) error {
 	}
 	_, rest := pem.Decode(content)
 	if next, _ := pem.Decode(rest); next != nil {
-		return errors.Newf("%q holds more than one PEM block; give each CA certificate in a file of its own", path)
+		return errors.Newf("%q holds more than one PEM block; give each certificate in a file of its own", path)
 	}
 	return nil
 }
@@ -234,7 +252,7 @@ func changePartyCAs(orderer *cb.ConfigGroup, cc *caChange) (*ordererOrgParties, 
 //     are;
 //   - add, remove and set change the lists and leave the node OUs as they are,
 //     so they may not drop the CA the node OUs pin.
-func applyCAChange(cc *caChange, caCerts, tlsCACerts caList, fabricConfig *mspproto.FabricMSPConfig) error {
+func applyCAChange(cc *caChange, caCerts, tlsCACerts caList, fabricConfig *msppb.FabricMSPConfig) error {
 	if cc.op == change.CAOpNodeOUs {
 		return moveNodeOUs(caCerts, fabricConfig, cc.signCerts[0])
 	}
@@ -256,7 +274,7 @@ func applyCAChange(cc *caChange, caCerts, tlsCACerts caList, fabricConfig *msppr
 // set change the root certificates but not the node OUs, so a change that drops
 // the pinned CA is rejected with what to do instead: move the node OUs with
 // node-ous first.
-func validateNodeOUPins(fabricConfig *mspproto.FabricMSPConfig) error {
+func validateNodeOUPins(fabricConfig *msppb.FabricMSPConfig) error {
 	for _, identifier := range nodeOUIdentifiers(fabricConfig) {
 		pinned := identifier.GetCertificate()
 		if len(pinned) > 0 && !mspHoldsCA(fabricConfig, pinned) {
@@ -270,7 +288,7 @@ func validateNodeOUPins(fabricConfig *mspproto.FabricMSPConfig) error {
 
 // mspHoldsCA reports whether the CA is one of the MSP's root or intermediate
 // certificates, the CAs a node OU may pin.
-func mspHoldsCA(fabricConfig *mspproto.FabricMSPConfig, cert []byte) bool {
+func mspHoldsCA(fabricConfig *msppb.FabricMSPConfig, cert []byte) bool {
 	return containsCertificate(fabricConfig.GetRootCerts(), cert) ||
 		containsCertificate(fabricConfig.GetIntermediateCerts(), cert)
 }
@@ -281,7 +299,7 @@ func mspHoldsCA(fabricConfig *mspproto.FabricMSPConfig, cert []byte) bool {
 // node OUs that pin a CA. The MSP checks the pins even when its node OUs are
 // not enabled, so the pins are moved then too, with a warning that they do not
 // classify identities.
-func moveNodeOUs(list caList, fabricConfig *mspproto.FabricMSPConfig, cert caCertificate) error {
+func moveNodeOUs(list caList, fabricConfig *msppb.FabricMSPConfig, cert givenCertificate) error {
 	for _, party := range list.parties {
 		if !containsCertificate(*party.certs, cert.pem) {
 			return errors.Newf("the %s list of party %d does not hold the certificate of %q",
@@ -341,7 +359,7 @@ func ordererOrgPartiesOf(orderer *cb.ConfigGroup, partyID uint32) (*ordererOrgPa
 //     more, it then holds exactly the certificates, in the order given.
 //
 // No certificates leave the lists unchanged.
-func changeCAList(op string, list caList, certs []caCertificate) error {
+func changeCAList(op string, list caList, certs []givenCertificate) error {
 	if len(certs) == 0 {
 		return nil
 	}
@@ -369,7 +387,7 @@ func changeCAList(op string, list caList, certs []caCertificate) error {
 // addCertificates appends to each place of the list each certificate that
 // place does not hold yet. A certificate a party's list already holds is
 // reported, as the request leaves it as it was.
-func addCertificates(list caList, certs []caCertificate) {
+func addCertificates(list caList, certs []givenCertificate) {
 	for _, cert := range certs {
 		for _, party := range list.parties {
 			if containsCertificate(*party.certs, cert.pem) {
@@ -387,7 +405,7 @@ func addCertificates(list caList, certs []caCertificate) {
 
 // removeCertificates removes the certificates from each place of the list.
 // Each must be in each party's list, and no party's list may be left empty.
-func removeCertificates(list caList, certs []caCertificate) error {
+func removeCertificates(list caList, certs []givenCertificate) error {
 	for _, party := range list.parties {
 		for _, cert := range certs {
 			if !containsCertificate(*party.certs, cert.pem) {
@@ -405,9 +423,9 @@ func removeCertificates(list caList, certs []caCertificate) error {
 }
 
 // withoutCertificates returns the list without the certificates.
-func withoutCertificates(list [][]byte, certs []caCertificate) [][]byte {
+func withoutCertificates(list [][]byte, certs []givenCertificate) [][]byte {
 	return slices.DeleteFunc(list, func(held []byte) bool {
-		return slices.ContainsFunc(certs, func(cert caCertificate) bool {
+		return slices.ContainsFunc(certs, func(cert givenCertificate) bool {
 			return sameCertificate(held, cert.pem)
 		})
 	})
@@ -418,7 +436,7 @@ func withoutCertificates(list [][]byte, certs []caCertificate) [][]byte {
 // OU identifier pins a single CA, which the MSP requires to be one of its root
 // certificates. An identifier that pins no CA, and an MSP without node OUs, are
 // left unchanged.
-func retargetNodeOUs(fabricConfig *mspproto.FabricMSPConfig, cert []byte) int {
+func retargetNodeOUs(fabricConfig *msppb.FabricMSPConfig, cert []byte) int {
 	retargeted := 0
 	for _, identifier := range nodeOUIdentifiers(fabricConfig) {
 		if len(identifier.GetCertificate()) > 0 {
@@ -431,7 +449,7 @@ func retargetNodeOUs(fabricConfig *mspproto.FabricMSPConfig, cert []byte) int {
 
 // nodeOUIdentifiers returns the node OU identifiers of the MSP: client, peer,
 // admin and orderer. An identifier the MSP does not have is nil.
-func nodeOUIdentifiers(fabricConfig *mspproto.FabricMSPConfig) []*mspproto.FabricOUIdentifier {
+func nodeOUIdentifiers(fabricConfig *msppb.FabricMSPConfig) []*mspproto.FabricOUIdentifier {
 	nodeOUs := fabricConfig.GetFabricNodeOus()
 	return []*mspproto.FabricOUIdentifier{
 		nodeOUs.GetClientOuIdentifier(),

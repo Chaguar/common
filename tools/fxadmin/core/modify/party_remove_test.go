@@ -211,10 +211,10 @@ func TestPartyRemoveRejects(t *testing.T) {
 			wantErr: `orderer org "orderer-org-shared": failed to parse endpoint "id=x,broadcast,router-2:7050"`,
 		},
 		{
-			name:    "a non-config block",
+			name:    nonConfigBlockCase,
 			block:   []byte("not a block"),
 			partyID: 1,
-			wantErr: "failed to unmarshal config block",
+			wantErr: errNotConfigBlock,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

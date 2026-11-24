@@ -17,6 +17,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/cockroachdb/errors"
 
+	"github.com/Chaguar/common/common/channelconfig"
 	"github.com/Chaguar/common/tools/fxadmin/core/modify/change"
 )
 
@@ -288,13 +289,14 @@ func (c *CLI) addFollowCommand() {
 	})
 }
 
-// addModifyCommands wires `fxadmin modify` and its app/party subcommands, which
-// apply a structured change directly to a config block file,
+// addModifyCommands wires `fxadmin modify` and its app/orderer/party
+// subcommands, which apply a structured change directly to a config block file,
 // automating the manual decode/hand-edit step.
 func (c *CLI) addModifyCommands() {
 	modify := c.app.Command("modify",
 		"Apply a structured configuration change to a config block file.")
 	c.addModifyAppCommands(modify)
+	c.addModifyOrdererCommands(modify)
 	c.addModifyPartyCommands(modify)
 }
 
@@ -307,7 +309,7 @@ func blockFlag(cmd *kingpin.CmdClause) *string {
 
 // addModifyAppCommands wires `fxadmin modify app` (add / remove / known-certs).
 func (c *CLI) addModifyAppCommands(modify *kingpin.CmdClause) {
-	app := modify.Command("app", "Add or remove application organizations and their known-certs.")
+	app := modify.Command("app", "Add or remove application organizations, or change their known-certs.")
 
 	add := app.Command("add", "Add an application organization.")
 	addOrg := add.Flag(flagOrg, "Path to the organization definition YAML.").Required().ExistingFile()
@@ -323,27 +325,42 @@ func (c *CLI) addModifyAppCommands(modify *kingpin.CmdClause) {
 		return c.handlers.Modify.AppRemove(*removeOrg, *removeBlockFlag)
 	})
 
-	c.addModifyKnownCertsCommands(app)
+	c.addModifyKnownCertsCommands(app, channelconfig.ApplicationGroupKey)
 }
 
-// addModifyKnownCertsCommands wires `fxadmin modify app known-certs add|remove`.
-func (c *CLI) addModifyKnownCertsCommands(app *kingpin.CmdClause) {
-	known := app.Command("known-certs", "Add or remove entries in an application org's MSP known-certs list.")
+// addModifyOrdererCommands wires `fxadmin modify orderer` (known-certs), which
+// changes orderer organizations. An ARMA party and its organization are changed
+// by `fxadmin modify party`.
+func (c *CLI) addModifyOrdererCommands(modify *kingpin.CmdClause) {
+	orderer := modify.Command("orderer", "Change orderer organizations: their known-certs.")
+	c.addModifyKnownCertsCommands(orderer, channelconfig.OrdererGroupKey)
+}
 
-	add := known.Command("add", "Add known-certs to an application organization.")
-	addOrg := add.Flag(flagOrg, "Application organization whose known-certs change.").Required().String()
-	addCerts := add.Flag(flagCert, "PEM path to add (repeatable).").Required().ExistingFiles()
-	addBlockFlag := blockFlag(add)
-	c.register(add, func() error {
-		return c.handlers.Modify.AppKnownCertsAdd(*addOrg, *addCerts, *addBlockFlag)
-	})
+// addModifyKnownCertsCommands wires `fxadmin modify app|orderer known-certs
+// add|remove|set` over the known-certs list of an org of the given config group.
+func (c *CLI) addModifyKnownCertsCommands(parent *kingpin.CmdClause, group string) {
+	known := parent.Command("known-certs", "Change the known-certs list of an org's MSP in the "+group+" group.")
+	for _, op := range []string{change.KnownCertsOpAdd, change.KnownCertsOpRemove, change.KnownCertsOpSet} {
+		c.registerKnownCertsOp(known, group, op)
+	}
+}
 
-	remove := known.Command("remove", "Remove known-certs from an application organization.")
-	removeOrg := remove.Flag(flagOrg, "Application organization whose known-certs change.").Required().String()
-	removeCerts := remove.Flag(flagCert, "PEM path to remove (repeatable).").Required().ExistingFiles()
-	removeBlockFlag := blockFlag(remove)
-	c.register(remove, func() error {
-		return c.handlers.Modify.AppKnownCertsRemove(*removeOrg, *removeCerts, *removeBlockFlag)
+// registerKnownCertsOp wires one `modify app|orderer known-certs` sub-verb (add,
+// remove, or set).
+func (c *CLI) registerKnownCertsOp(known *kingpin.CmdClause, group, op string) {
+	cmd := known.Command(op, "Apply the "+op+" operation to an org's MSP known-certs list.")
+	org := cmd.Flag(flagOrg, "Name of the org in the "+group+" group (its group name, not its MSP ID).").
+		Required().String()
+	certs := cmd.Flag(flagCert, "PEM path of a known certificate (repeatable).").Required().ExistingFiles()
+	block := blockFlag(cmd)
+	c.register(cmd, func() error {
+		return c.handlers.Modify.KnownCerts(change.KnownCerts{
+			Op:        op,
+			Group:     group,
+			Org:       *org,
+			Certs:     *certs,
+			BlockPath: *block,
+		})
 	})
 }
 
