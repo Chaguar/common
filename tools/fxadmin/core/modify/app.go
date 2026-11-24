@@ -8,6 +8,7 @@ package modify
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -79,19 +80,23 @@ func loadAppOrgDefinition(path string) (string, *cb.ConfigGroup, error) {
 	if err = yaml.Unmarshal(content, &definition); err != nil {
 		return "", nil, errors.Wrapf(err, "failed to parse organization definition %q", path)
 	}
-	for key := range definition {
-		if !slices.Contains([]string{orgDefNameKey, orgDefConfigGroupKey}, key) {
-			return "", nil, errors.Newf("organization definition %q has an unknown key %q: want %q and %q",
-				path, key, orgDefNameKey, orgDefConfigGroupKey)
+	unknown := make([]string, 0, len(definition))
+	for _, key := range slices.Sorted(maps.Keys(definition)) {
+		if key != orgDefNameKey && key != orgDefConfigGroupKey {
+			unknown = append(unknown, key)
 		}
 	}
-	name, ok := definition[orgDefNameKey].(string)
-	if !ok || name == "" {
-		return "", nil, errors.Newf("organization definition %q has no %s", path, orgDefNameKey)
+	if len(unknown) > 0 {
+		return "", nil, errors.Newf("organization definition %q has unknown keys %q: want %q and %q",
+			path, unknown, orgDefNameKey, orgDefConfigGroupKey)
 	}
-	group, ok := definition[orgDefConfigGroupKey].(map[string]any)
-	if !ok {
-		return "", nil, errors.Newf("organization definition %q has no %s", path, orgDefConfigGroupKey)
+	name, err := appOrgDefinitionName(definition, path)
+	if err != nil {
+		return "", nil, err
+	}
+	group, err := appOrgDefinitionGroup(definition, path)
+	if err != nil {
+		return "", nil, err
 	}
 	if err := readCertificateFiles(group, filepath.Dir(path)); err != nil {
 		return "", nil, fmt.Errorf("organization definition %q: %w", path, err)
@@ -103,4 +108,36 @@ func loadAppOrgDefinition(path string) (string, *cb.ConfigGroup, error) {
 			orgDefConfigGroupKey, path, err)
 	}
 	return name, org, nil
+}
+
+// appOrgDefinitionName returns the name of the parsed organization definition
+// at path, which must be a non-empty string. A name that is not set, or is
+// empty, is missing; a name of another type is rejected as such.
+func appOrgDefinitionName(definition map[string]any, path string) (string, error) {
+	switch name := definition[orgDefNameKey].(type) {
+	case string:
+		if name != "" {
+			return name, nil
+		}
+	case nil:
+	default:
+		return "", errors.Newf("the %s of organization definition %q must be a string, got %T",
+			orgDefNameKey, path, name)
+	}
+	return "", errors.Newf("organization definition %q has no %s", path, orgDefNameKey)
+}
+
+// appOrgDefinitionGroup returns the config group of the parsed organization
+// definition at path, which must be a map. A config group that is not set is
+// missing; one of another type is rejected as such.
+func appOrgDefinitionGroup(definition map[string]any, path string) (map[string]any, error) {
+	switch group := definition[orgDefConfigGroupKey].(type) {
+	case map[string]any:
+		return group, nil
+	case nil:
+		return nil, errors.Newf("organization definition %q has no %s", path, orgDefConfigGroupKey)
+	default:
+		return nil, errors.Newf("the %s of organization definition %q must be a map, got %T",
+			orgDefConfigGroupKey, path, group)
+	}
 }

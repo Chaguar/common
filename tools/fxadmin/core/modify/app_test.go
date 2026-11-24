@@ -105,7 +105,8 @@ func TestAppAdd(t *testing.T) {
 }
 
 // TestAppAddREADMEDefinition adds an application org from the definition the
-// fxadmin README shows, exactly as it is written there: comments, null fields,
+// fxadmin README shows, exactly as it is written there (tools/fxadmin/docs/README.md
+// in https://github.com/Chaguar/chaguar): comments, null fields,
 // empty lists, the unquoted n key of the policy rules, and the certificates of
 // the org given as the paths of their PEM files, relative to the directory of
 // the definition. The org's MSP then holds exactly the certificates of those
@@ -263,9 +264,14 @@ func TestAppAddRejects(t *testing.T) {
 			wantErr:    "has no name",
 		},
 		{
+			name: "an empty name", block: baseBlock,
+			definition: marshalDefinition(t, map[string]any{appTestNameKey: "", appTestConfigGroupKey: orgMap}),
+			wantErr:    "has no name",
+		},
+		{
 			name: "a name that is not a string", block: baseBlock,
 			definition: marshalDefinition(t, map[string]any{appTestNameKey: 5, appTestConfigGroupKey: orgMap}),
-			wantErr:    "has no name",
+			wantErr:    "must be a string, got int",
 		},
 		{
 			name: "no config group", block: baseBlock,
@@ -273,10 +279,25 @@ func TestAppAddRejects(t *testing.T) {
 			wantErr:    "has no config_group",
 		},
 		{
+			name: "a config group that is not a map", block: baseBlock,
+			definition: marshalDefinition(t, map[string]any{
+				appTestNameKey: appTestNewOrg, appTestConfigGroupKey: []any{1},
+			}),
+			wantErr: "must be a map, got []interface {}",
+		},
+		{
 			// The old form of a definition: a Name key next to the group's own keys.
 			name: "an unknown key", block: baseBlock,
 			definition: marshalDefinition(t, map[string]any{"Name": appTestNewOrg, appTestConfigGroupKey: orgMap}),
-			wantErr:    `has an unknown key "Name": want "name" and "config_group"`,
+			wantErr:    `has unknown keys ["Name"]: want "name" and "config_group"`,
+		},
+		{
+			// Every unknown key is named, sorted, so the error is the same on every run.
+			name: "two unknown keys", block: baseBlock,
+			definition: marshalDefinition(t, map[string]any{
+				"Name": appTestNewOrg, "MSP": map[string]any{}, appTestConfigGroupKey: orgMap,
+			}),
+			wantErr: `has unknown keys ["MSP" "Name"]: want "name" and "config_group"`,
 		},
 		{
 			name: "not YAML", block: baseBlock,
@@ -540,7 +561,8 @@ func writeAppTestDefinitionIn(t *testing.T, dir, definition string) string {
 }
 
 // appTestREADMEDefinition is the organization definition of appTestNewOrg,
-// exactly as the fxadmin README writes it. Its certificates are the paths,
+// exactly as the fxadmin README writes it, in its modify app add section
+// (tools/fxadmin/docs/README.md in https://github.com/Chaguar/chaguar). Its certificates are the paths,
 // relative to the directory of the definition, of the files of the MSP's root
 // certificate, its admin certificate, its TLS root certificate, and two known
 // certificates.
