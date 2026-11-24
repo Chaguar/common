@@ -139,8 +139,8 @@ func readCACertificates(paths []string) ([]givenCertificate, error) {
 }
 
 // readGivenCertificates reads the certificate files at paths. Each must hold a
-// single PEM block, a PEM-encoded X.509 certificate that passes check, and no
-// certificate may be given twice.
+// single PEM block, a PEM-encoded X.509 certificate that passes check, when
+// check is set, and no certificate may be given twice.
 func readGivenCertificates(
 	paths []string, check func(path string, cert *x509.Certificate) error,
 ) ([]givenCertificate, error) {
@@ -153,8 +153,10 @@ func readGivenCertificates(
 		if err := requireOnePEMBlock(path); err != nil {
 			return nil, err
 		}
-		if err := check(path, cert); err != nil {
-			return nil, err
+		if check != nil {
+			if err := check(path, cert); err != nil {
+				return nil, err
+			}
 		}
 		for _, given := range certs {
 			if sameCertificate(given.pem, content) {

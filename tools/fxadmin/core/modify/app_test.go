@@ -9,18 +9,22 @@ package modify_test
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
+	mspproto "github.com/hyperledger/fabric-protos-go-apiv2/msp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/Chaguar/common/api/msppb"
 	"github.com/Chaguar/common/common/channelconfig"
 	"github.com/Chaguar/common/protolator/protoext/peerext"
+	"github.com/Chaguar/common/protoutil"
 	"github.com/Chaguar/common/tools/cryptogen"
+	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 	"github.com/Chaguar/common/tools/fxadmin/core/modify"
 	"github.com/Chaguar/common/utils/test"
 )
@@ -41,12 +45,18 @@ const (
 	// The keys of an organization definition.
 	appTestNameKey        = "name"
 	appTestConfigGroupKey = "config_group"
+	// appTestRootCertsField is the field of an MSP config that holds its root
+	// certificates.
+	appTestRootCertsField = "root_certs"
+	// appTestClientOU is the OU of the clients of an org.
+	appTestClientOU = "client"
 )
 
 // TestAppAdd adds an application org from its definition, the org's name and
-// its config group in the form it has in the config block, and checks the
-// edited block: the org's group is exactly the group of the definition, nothing
-// else in the config changes, and the block still loads as a channel config.
+// its config group in the form it has in the config block, with the paths of
+// its certificate files, and checks the edited block: the org's group is
+// exactly the group of the definition, nothing else in the config changes, and
+// the block still loads as a channel config.
 func TestAppAdd(t *testing.T) {
 	t.Parallel()
 
@@ -94,10 +104,12 @@ func TestAppAdd(t *testing.T) {
 	}
 }
 
-// TestAppAddREADMEDefinition adds an application org from a definition written
-// as the fxadmin README shows it: comments, null fields, empty lists, and the
-// unquoted n key of the policy rules, with the certificates of the org given
-// as base64-encoded PEM. The org's MSP then holds exactly those certificates.
+// TestAppAddREADMEDefinition adds an application org from the definition the
+// fxadmin README shows, exactly as it is written there: comments, null fields,
+// empty lists, the unquoted n key of the policy rules, and the certificates of
+// the org given as the paths of their PEM files, relative to the directory of
+// the definition. The org's MSP then holds exactly the certificates of those
+// files.
 func TestAppAddREADMEDefinition(t *testing.T) {
 	t.Parallel()
 
@@ -105,15 +117,20 @@ func TestAppAddREADMEDefinition(t *testing.T) {
 	require.NotEmpty(t, msp.GetAdmins())
 	require.GreaterOrEqual(t, len(msp.GetKnownCerts()), 2)
 	known := msp.GetKnownCerts()[:2]
-	definition := fmt.Sprintf(appTestREADMEDefinition,
-		base64.StdEncoding.EncodeToString(msp.GetRootCerts()[0]),
-		base64.StdEncoding.EncodeToString(msp.GetAdmins()[0]),
-		base64.StdEncoding.EncodeToString(msp.GetTlsRootCerts()[0]),
-		base64.StdEncoding.EncodeToString(known[0]),
-		base64.StdEncoding.EncodeToString(known[1]))
+	dir := t.TempDir()
+	for path, cert := range map[string][]byte{
+		"crypto/peer2/ca/ca-cert.pem":                     msp.GetRootCerts()[0],
+		"crypto/peer2/users/Admin/msp/signcerts/cert.pem": msp.GetAdmins()[0],
+		"crypto/peer2/tlsca/tlsca-cert.pem":               msp.GetTlsRootCerts()[0],
+		"crypto/peer2/users/User1/msp/signcerts/cert.pem": known[0],
+		"crypto/peer2/users/User2/msp/signcerts/cert.pem": known[1],
+	} {
+		writeDefinitionFile(t, dir, path, cert)
+	}
 
 	blockPath := writeNodeTestBlock(t, newAppTestBlock(t))
-	require.NoError(t, modify.New().AppAdd(writeAppTestDefinition(t, definition), blockPath))
+	orgPath := writeAppTestDefinitionIn(t, dir, appTestREADMEDefinition)
+	require.NoError(t, modify.New().AppAdd(orgPath, blockPath))
 
 	application := nodeTestConfigOf(t, readNodeTestFile(t, blockPath)).GetChannelGroup().
 		GetGroups()[channelconfig.ApplicationGroupKey]
@@ -127,6 +144,60 @@ func TestAppAddREADMEDefinition(t *testing.T) {
 	require.Equal(t, [][]byte{msp.GetTlsRootCerts()[0]}, addedMSP.GetTlsRootCerts())
 	require.Equal(t, known, addedMSP.GetKnownCerts())
 	require.Nil(t, addedMSP.GetFabricNodeOus())
+}
+
+// TestAppAddNodeOUs adds an org whose MSP sets node OUs, enabled or not: the
+// client OU pins the org's CA, given by the path of its file, and the other OUs
+// pin no CA, which the definition gives as an empty certificate, as `fxadmin
+// decode` prints it. The MSP reads the node OUs, and accepts an OU that pins
+// no CA, whether they are enabled or not.
+func TestAppAddNodeOUs(t *testing.T) {
+	t.Parallel()
+
+	baseOrg := newAppTestOrgGroup(t)
+	caCert := nodeTestFabricMSPConfig(t, baseOrg).GetRootCerts()[0]
+
+	for _, tc := range []struct {
+		name   string
+		enable bool
+	}{
+		{name: "node OUs enabled", enable: true},
+		{name: "node OUs disabled", enable: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			fabricConfig := nodeTestFabricMSPConfig(t, baseOrg)
+			fabricConfig.FabricNodeOus = &mspproto.FabricNodeOUs{
+				Enable: tc.enable,
+				ClientOuIdentifier: &mspproto.FabricOUIdentifier{
+					Certificate: caCert, OrganizationalUnitIdentifier: appTestClientOU,
+				},
+				PeerOuIdentifier:    &mspproto.FabricOUIdentifier{OrganizationalUnitIdentifier: "peer"},
+				AdminOuIdentifier:   &mspproto.FabricOUIdentifier{OrganizationalUnitIdentifier: "admin"},
+				OrdererOuIdentifier: &mspproto.FabricOUIdentifier{OrganizationalUnitIdentifier: "orderer"},
+			}
+			org := withAppTestFabricMSPConfig(t, baseOrg, fabricConfig)
+
+			// The client OU's CA is given by the path of its file; the other OUs
+			// keep the empty certificate the rendered group has.
+			definition := parseDefinition(t, appTestDefinition(t, appTestNewOrg, org, appTestFormatYAML))
+			renderedMSP, ok := mspConfigMapOf(childMap(t, definition, appTestConfigGroupKey))
+			require.True(t, ok)
+			clientOU := childMap(t, childMap(t, renderedMSP, "fabric_node_ous"), "client_ou_identifier")
+			caPath := filepath.Join(t.TempDir(), "ca.pem")
+			require.NoError(t, os.WriteFile(caPath, caCert, 0o600))
+			clientOU["certificate"] = caPath
+
+			blockPath := writeNodeTestBlock(t, newAppTestBlock(t))
+			orgPath := writeAppTestDefinition(t, marshalDefinition(t, definition))
+			require.NoError(t, modify.New().AppAdd(orgPath, blockPath))
+
+			application := nodeTestConfigOf(t, readNodeTestFile(t, blockPath)).GetChannelGroup().
+				GetGroups()[channelconfig.ApplicationGroupKey]
+			test.RequireProtoEqual(t, org, application.GetGroups()[appTestNewOrg])
+		})
+	}
 }
 
 // TestAppAddCopyOfAnOrg adds an application org of the block again, under
@@ -158,9 +229,14 @@ func TestAppAddRejects(t *testing.T) {
 
 	baseBlock := newAppTestBlock(t)
 	org := newAppTestOrgGroup(t)
-	orgMap := protolatorMapOf(t, &peerext.DynamicApplicationOrgGroup{ConfigGroup: org})
+	orgMap := childMap(t, parseDefinition(t, appTestDefinition(t, appTestNewOrg, org, appTestFormatYAML)),
+		appTestConfigGroupKey)
 	withoutMSP := proto.CloneOf(org)
 	delete(withoutMSP.Values, channelconfig.MSPKey)
+	unpinnedOU := nodeTestFabricMSPConfig(t, org)
+	unpinnedOU.OrganizationalUnitIdentifiers = []*mspproto.FabricOUIdentifier{
+		{OrganizationalUnitIdentifier: appTestClientOU},
+	}
 
 	for _, tc := range []struct {
 		name       string
@@ -215,9 +291,21 @@ func TestAppAddRejects(t *testing.T) {
 			wantErr: "failed to decode the config_group of organization definition",
 		},
 		{
+			// Unlike a node OU, an OU identifier must pin a CA.
+			name: "an OU identifier with no certificate", block: baseBlock,
+			definition: appTestDefinition(t, appTestNewOrg, withAppTestFabricMSPConfig(t, org, unpinnedOU),
+				appTestFormatYAML),
+			wantErr: "failed getting certificate for",
+		},
+		{
 			name: "an org group without an MSP", block: baseBlock,
 			definition: appTestDefinition(t, appTestNewOrg, withoutMSP, appTestFormatYAML),
 			wantErr:    "the edited config is not a valid channel config",
+		},
+		{
+			name: "a block with no Application group", block: withoutAppTestApplication(t, baseBlock),
+			definition: appTestDefinition(t, appTestNewOrg, org, appTestFormatYAML),
+			wantErr:    "the config has no Application group",
 		},
 		{
 			name: "a block file that is not a config block", block: []byte("not a block"),
@@ -233,6 +321,92 @@ func TestAppAddRejects(t *testing.T) {
 			err := modify.New().AppAdd(orgPath, blockPath)
 			require.ErrorContains(t, err, tc.wantErr)
 			requireArmaBlockUnchanged(t, blockPath, tc.block)
+		})
+	}
+}
+
+// TestAppAddRejectsCertificateFiles covers certificate and CRL files of the
+// org's MSP that must fail the checks the other modify commands make on
+// certificate files, and asserts that a failed add leaves the block file
+// unchanged.
+func TestAppAddRejectsCertificateFiles(t *testing.T) {
+	t.Parallel()
+
+	baseBlock := newAppTestBlock(t)
+	org := newAppTestOrgGroup(t)
+	orgMSP := nodeTestFabricMSPConfig(t, org)
+	caCert, identityCert := orgMSP.GetRootCerts()[0], orgMSP.GetAdmins()[0]
+	certDir := t.TempDir()
+	caPath := filepath.Join(certDir, "ca.pem")
+	identityPath := filepath.Join(certDir, "identity.pem")
+	notPEMPath := filepath.Join(certDir, "not-pem.pem")
+	caAndKeyPath := filepath.Join(certDir, "ca-and-key.pem")
+	for path, content := range map[string][]byte{
+		caPath:       caCert,
+		identityPath: identityCert,
+		notPEMPath:   []byte("not a certificate"),
+		caAndKeyPath: slices.Concat(caCert, []byte(partyTestPrivateKey)),
+	} {
+		require.NoError(t, os.WriteFile(path, content, 0o600))
+	}
+
+	for _, tc := range []struct {
+		name string
+		// field is the MSP config field the values are given in, in place of
+		// its paths.
+		field   string
+		values  []string
+		wantErr string
+	}{
+		{
+			name: "a certificate given inline, not as the path of its file", field: appTestRootCertsField,
+			values:  []string{base64.StdEncoding.EncodeToString(caCert)},
+			wantErr: "root_certs: failed to read certificate",
+		},
+		{
+			name: "a root certificate file that is not PEM", field: appTestRootCertsField, values: []string{notPEMPath},
+			wantErr: `not-pem.pem" is not a PEM-encoded certificate`,
+		},
+		{
+			name: "a certificate followed by a private key in its file", field: appTestRootCertsField,
+			values:  []string{caAndKeyPath},
+			wantErr: `ca-and-key.pem" holds more than one PEM block`,
+		},
+		{
+			name: "an identity certificate as a root certificate", field: appTestRootCertsField,
+			values:  []string{identityPath},
+			wantErr: `identity.pem" is not a CA certificate`,
+		},
+		{
+			name: "an identity certificate as a TLS root certificate", field: "tls_root_certs",
+			values:  []string{identityPath},
+			wantErr: `tls_root_certs: "` + identityPath + `" is not a CA certificate`,
+		},
+		{
+			name: "a CA certificate as an admin certificate", field: "admins", values: []string{caPath},
+			wantErr: `admins: "` + caPath + `" is a CA certificate, not the certificate of an identity`,
+		},
+		{
+			name: "a CA certificate as a known certificate", field: "known_certs", values: []string{caPath},
+			wantErr: `known_certs: "` + caPath + `" is a CA certificate, not the certificate of an identity`,
+		},
+		{
+			name: "the same root certificate twice", field: appTestRootCertsField, values: []string{caPath, caPath},
+			wantErr: `ca.pem" hold the same certificate`,
+		},
+		{
+			name: "a certificate as a CRL", field: "revocation_list", values: []string{caPath},
+			wantErr: `ca.pem" is not a PEM-encoded CRL`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			blockPath := writeNodeTestBlock(t, baseBlock)
+			orgPath := writeAppTestDefinition(t, appTestDefinitionWithFiles(t, org, tc.field, tc.values...))
+			err := modify.New().AppAdd(orgPath, blockPath)
+			require.ErrorContains(t, err, tc.wantErr)
+			requireArmaBlockUnchanged(t, blockPath, baseBlock)
 		})
 	}
 }
@@ -278,6 +452,32 @@ func appTestPeerOrg(name string) cryptogen.OrganizationParameters {
 	}
 }
 
+// withoutAppTestApplication returns the marshaled block without its
+// Application group.
+func withoutAppTestApplication(t *testing.T, marshaledBlock []byte) []byte {
+	t.Helper()
+	configBlock, err := helpers.UnmarshalAndDecodeConfigBlock(marshaledBlock)
+	require.NoError(t, err)
+	delete(configBlock.Config().GetChannelGroup().GetGroups(), channelconfig.ApplicationGroupKey)
+	require.NoError(t, configBlock.Encode())
+	return protoutil.MarshalOrPanic(configBlock.Block)
+}
+
+// withAppTestFabricMSPConfig returns a copy of the org whose MSP holds
+// fabricConfig as its Fabric MSP config.
+func withAppTestFabricMSPConfig(
+	t *testing.T, org *cb.ConfigGroup, fabricConfig *msppb.FabricMSPConfig,
+) *cb.ConfigGroup {
+	t.Helper()
+	withConfig := proto.CloneOf(org)
+	value := withConfig.GetValues()[channelconfig.MSPKey]
+	mspConfig := &mspproto.MSPConfig{}
+	require.NoError(t, proto.Unmarshal(value.GetValue(), mspConfig))
+	mspConfig.Config = protoutil.MarshalOrPanic(fabricConfig)
+	value.Value = protoutil.MarshalOrPanic(mspConfig)
+	return withConfig
+}
+
 // withAppTestMSPName returns a copy of the org whose Fabric MSP is named mspID.
 func withAppTestMSPName(t *testing.T, org *cb.ConfigGroup, mspID string) *cb.ConfigGroup {
 	t.Helper()
@@ -288,13 +488,17 @@ func withAppTestMSPName(t *testing.T, org *cb.ConfigGroup, mspID string) *cb.Con
 
 // appTestDefinition renders the organization definition of an org: its name
 // and its config group, in the form `fxadmin decode` prints the group, as YAML
-// or JSON.
+// or JSON. Each certificate of the group's MSP is written to a file in a fresh
+// directory and given by the file's absolute path, so that the definition can
+// be written in any directory.
 func appTestDefinition(t *testing.T, name string, org *cb.ConfigGroup, format string) string {
 	t.Helper()
-	definition := map[string]any{
-		appTestNameKey:        name,
-		appTestConfigGroupKey: protolatorMapOf(t, &peerext.DynamicApplicationOrgGroup{ConfigGroup: org}),
+	group := protolatorMapOf(t, &peerext.DynamicApplicationOrgGroup{ConfigGroup: org})
+	if mspConfig, ok := mspConfigMapOf(group); ok {
+		files := &certificateFiles{t: t, dir: t.TempDir(), absolute: true}
+		files.replaceMSPWithPaths(mspConfig)
 	}
+	definition := map[string]any{appTestNameKey: name, appTestConfigGroupKey: group}
 	if format == appTestFormatJSON {
 		content, err := json.Marshal(definition)
 		require.NoError(t, err)
@@ -303,23 +507,47 @@ func appTestDefinition(t *testing.T, name string, org *cb.ConfigGroup, format st
 	return marshalDefinition(t, definition)
 }
 
+// appTestDefinitionWithFiles renders the organization definition of the org
+// as appTestNewOrg, with the field of its MSP config set to the given values in
+// place of the paths of the field's files.
+func appTestDefinitionWithFiles(t *testing.T, org *cb.ConfigGroup, field string, values ...string) string {
+	t.Helper()
+	definition := parseDefinition(t, appTestDefinition(t, appTestNewOrg, org, appTestFormatYAML))
+	mspConfig, ok := mspConfigMapOf(childMap(t, definition, appTestConfigGroupKey))
+	require.True(t, ok)
+	items := make([]any, len(values))
+	for i, value := range values {
+		items[i] = value
+	}
+	mspConfig[field] = items
+	return marshalDefinition(t, definition)
+}
+
 // writeAppTestDefinition writes the definition as peer2.yaml in a fresh
 // directory and returns its path.
 func writeAppTestDefinition(t *testing.T, definition string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), appTestNewOrg+".yaml")
+	return writeAppTestDefinitionIn(t, t.TempDir(), definition)
+}
+
+// writeAppTestDefinitionIn writes the definition as peer2.yaml in dir and
+// returns its path.
+func writeAppTestDefinitionIn(t *testing.T, dir, definition string) string {
+	t.Helper()
+	path := filepath.Join(dir, appTestNewOrg+".yaml")
 	require.NoError(t, os.WriteFile(path, []byte(definition), 0o600))
 	return path
 }
 
-// appTestREADMEDefinition is the organization definition of appTestNewOrg as
-// the fxadmin README writes it. Each %s is a certificate, base64-encoded PEM:
-// the MSP's root certificate, its admin certificate, its TLS root certificate,
-// and two known certificates.
+// appTestREADMEDefinition is the organization definition of appTestNewOrg,
+// exactly as the fxadmin README writes it. Its certificates are the paths,
+// relative to the directory of the definition, of the files of the MSP's root
+// certificate, its admin certificate, its TLS root certificate, and two known
+// certificates.
 const appTestREADMEDefinition = `# peer2.yaml
 name: peer2                          # the org's key under Application
 
-config_group:                        # -> Application/groups/<name>
+config_group:                        # → Application/groups/<name>
   version: "0"
   mod_policy: Admins
   groups: {}
@@ -406,10 +634,10 @@ config_group:                        # -> Application/groups/<name>
         config:                      # FabricMSPConfig
           name: peer2                # MSP ID; the msp_identifier of the policies
           root_certs:
-            - %s
+            - crypto/peer2/ca/ca-cert.pem
           intermediate_certs: []
           admins:
-            - %s
+            - crypto/peer2/users/Admin/msp/signcerts/cert.pem
           revocation_list: []
           signing_identity: null
           organizational_unit_identifiers: []
@@ -417,10 +645,10 @@ config_group:                        # -> Application/groups/<name>
             signature_hash_family: SHA2
             identity_identifier_hash_function: SHA256
           tls_root_certs:
-            - %s
+            - crypto/peer2/tlsca/tlsca-cert.pem
           tls_intermediate_certs: []
           fabric_node_ous: null
           known_certs:
-            - %s
-            - %s
+            - crypto/peer2/users/User1/msp/signcerts/cert.pem
+            - crypto/peer2/users/User2/msp/signcerts/cert.pem
 `

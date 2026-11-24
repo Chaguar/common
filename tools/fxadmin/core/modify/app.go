@@ -9,6 +9,7 @@ package modify
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 
 	"github.com/cockroachdb/errors"
@@ -30,10 +31,11 @@ const (
 // AppAdd implements `fxadmin modify app add`. The organization definition at
 // orgPath holds the org's name, its key under the Application group, and its
 // config group, in the form it has in the config block: its policies and its
-// MSP, with every certificate given as base64-encoded PEM. The group is added
-// as is, under that name, to the Application group of the config block at
-// blockPath, which is rewritten in place; nothing is filled in. An org whose
-// name is already in the Application group is rejected.
+// MSP, with every certificate and CRL given as the path of its PEM file. The
+// group is added as is, with each file read in place of its path, under that
+// name, to the Application group of the config block at blockPath, which is
+// rewritten in place; nothing is filled in. An org whose name is already in the
+// Application group is rejected.
 func (*Handler) AppAdd(orgPath, blockPath string) error {
 	logger.Debugf("modify app add: org=%s block=%s", orgPath, blockPath)
 
@@ -66,7 +68,8 @@ func (*Handler) AppAdd(orgPath, blockPath string) error {
 
 // loadAppOrgDefinition reads the organization definition YAML at path and
 // returns the org's name and config group. The definition has exactly two
-// keys: the name, and the config group, which is decoded as is.
+// keys: the name, and the config group, which is decoded as is once its
+// certificate and CRL files are read.
 func loadAppOrgDefinition(path string) (string, *cb.ConfigGroup, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -89,6 +92,9 @@ func loadAppOrgDefinition(path string) (string, *cb.ConfigGroup, error) {
 	group, ok := definition[orgDefConfigGroupKey].(map[string]any)
 	if !ok {
 		return "", nil, errors.Newf("organization definition %q has no %s", path, orgDefConfigGroupKey)
+	}
+	if err := readCertificateFiles(group, filepath.Dir(path)); err != nil {
+		return "", nil, fmt.Errorf("organization definition %q: %w", path, err)
 	}
 
 	org := &cb.ConfigGroup{}

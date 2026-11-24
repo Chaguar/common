@@ -161,7 +161,7 @@ func TestKnownCertsRejects(t *testing.T) {
 			name: "a CA certificate", block: baseBlock, op: knownTestAdd, org: peerOrg,
 			certs: []string{caPath},
 			wantErr: `invalid known certificates: "` + caPath +
-				`" is a CA certificate; a known certificate must be an identity certificate`,
+				`" is a CA certificate, not the certificate of an identity`,
 		},
 		{
 			name: "the same certificate twice", block: baseBlock, op: knownTestSet, org: peerOrg,

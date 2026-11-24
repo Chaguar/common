@@ -94,7 +94,7 @@ func readKnownCertsChange(ch change.KnownCerts) ([]givenCertificate, error) {
 // certificate.
 func rejectCACertificate(path string, cert *x509.Certificate) error {
 	if cert.IsCA {
-		return errors.Newf("%q is a CA certificate; a known certificate must be an identity certificate", path)
+		return errors.Newf("%q is a CA certificate, not the certificate of an identity", path)
 	}
 	return nil
 }
