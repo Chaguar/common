@@ -365,10 +365,9 @@ func TestPartyAddRejectsInvalidHosts(t *testing.T) {
 }
 
 // TestPartyAddReadsCertificateFiles verifies how the certificate and CRL paths
-// of a party definition are read: an absolute path is used as is, each file is
-// stored as the one PEM block it starts with (so a private key after a
-// certificate is not stored), and the org's revocation list and OU identifier
-// certificates are read from files too.
+// of a party definition are read: an absolute path is used as is, and the
+// org's revocation list and OU identifier certificates are read from files
+// too.
 func TestPartyAddReadsCertificateFiles(t *testing.T) {
 	t.Parallel()
 
@@ -376,11 +375,10 @@ func TestPartyAddReadsCertificateFiles(t *testing.T) {
 	definitionDir, rendered := renderPartyDefinition(t, party, joiningOrdererOrg, org)
 	certDir := t.TempDir()
 
-	// The router's TLS certificate, by an absolute path, followed in its file by a private key.
+	// The router's TLS certificate, by an absolute path.
 	routerTLSCert := party.GetRouterConfig().GetNodeConfig().GetServerTlsCert()
-	privateKey := []byte("-----BEGIN PRIVATE KEY-----\nU0VDUkVUS0VZ\n-----END PRIVATE KEY-----\n")
-	routerTLSCertPath := filepath.Join(certDir, "router-tls-and-key.pem")
-	require.NoError(t, os.WriteFile(routerTLSCertPath, slices.Concat(routerTLSCert, privateKey), 0o600))
+	routerTLSCertPath := filepath.Join(certDir, "router-tls.pem")
+	require.NoError(t, os.WriteFile(routerTLSCertPath, routerTLSCert, 0o600))
 
 	// A CRL and an OU identifier's certificate for the org's MSP, by paths
 	// relative to the definition.
@@ -404,10 +402,7 @@ func TestPartyAddReadsCertificateFiles(t *testing.T) {
 
 	require.NoError(t, modify.New().PartyAdd(partyPath, blockPath))
 
-	editedBlock, err := os.ReadFile(blockPath)
-	require.NoError(t, err)
-	require.NotContains(t, string(editedBlock), "PRIVATE KEY")
-	edited := nodeTestOrderer(t, editedBlock)
+	edited := nodeTestOrderer(t, readNodeTestFile(t, blockPath))
 	parties := nodeTestSharedConfig(t, edited).GetPartiesConfig()
 	require.Equal(t, routerTLSCert, parties[len(parties)-1].GetRouterConfig().GetNodeConfig().GetServerTlsCert())
 	editedMSP := nodeTestFabricMSPConfig(t, edited.GetGroups()[joiningOrdererOrg])
@@ -423,6 +418,7 @@ func TestPartyAddRejectsCertificateFiles(t *testing.T) {
 
 	baseBlock := newArmaConfigBlock(t)
 	party, org := newJoiningParty(t)
+	routerTLSCert := party.GetRouterConfig().GetNodeConfig().GetServerTlsCert()
 
 	for _, tc := range []struct {
 		name string
@@ -439,7 +435,12 @@ func TestPartyAddRejectsCertificateFiles(t *testing.T) {
 		{
 			name:        "file that is not PEM",
 			fileContent: []byte("not a certificate"),
-			wantErr:     "holds no PEM block",
+			wantErr:     `router-tls.pem" is not a PEM-encoded certificate`,
+		},
+		{
+			name:        "a certificate followed by a private key in its file",
+			fileContent: slices.Concat(routerTLSCert, []byte(partyTestPrivateKey)),
+			wantErr:     `router-tls.pem" holds more than one PEM block`,
 		},
 		{
 			name:      "a number where a path is expected",
@@ -470,19 +471,21 @@ func TestPartyAddRejectsCertificateFiles(t *testing.T) {
 	}
 }
 
-// TestPartyAddRejectsInvalidOrgFiles verifies that an org MSP file that is not
-// a valid certificate or CRL is rejected when the edited config is checked, by
-// the MSP, and the block file is left unchanged.
+// TestPartyAddRejectsInvalidOrgFiles verifies that an org MSP file that does
+// not hold what its field needs is rejected: a CA certificate in a CA field, a
+// certificate of an identity in an identity field, and a CRL in the revocation
+// list. The block file is left unchanged.
 func TestPartyAddRejectsInvalidOrgFiles(t *testing.T) {
 	t.Parallel()
 
 	baseBlock := newArmaConfigBlock(t)
 	party, org := newJoiningParty(t)
-	privateKey := []byte("-----BEGIN PRIVATE KEY-----\nU0VDUkVUS0VZ\n-----END PRIVATE KEY-----\n")
+	privateKey := []byte(partyTestPrivateKey)
 	crl := readNodeTestFile(t, "../../../../msp/testdata/revocation/crls/crl.pem")
-	caCert := nodeTestFabricMSPConfig(t, org).GetRootCerts()[0]
-	// errNotACertificate is how the MSP rejects a file that is not a certificate.
-	errNotACertificate := "failed to parse x509 cert"
+	orgMSP := nodeTestFabricMSPConfig(t, org)
+	caCert, adminCert := orgMSP.GetRootCerts()[0], orgMSP.GetAdmins()[0]
+	// errNotACertificate is how a file that is not a certificate is rejected.
+	errNotACertificate := `msp/file.pem" is not a PEM-encoded certificate`
 
 	for _, tc := range []struct {
 		name        string
@@ -506,7 +509,19 @@ func TestPartyAddRejectsInvalidOrgFiles(t *testing.T) {
 			name:        "certificate as a CRL",
 			field:       "revocation_list",
 			fileContent: caCert,
-			wantErr:     "could not parse RevocationList",
+			wantErr:     `msp/file.pem" is not a PEM-encoded CRL`,
+		},
+		{
+			name:        "identity certificate as a root certificate",
+			field:       "root_certs",
+			fileContent: adminCert,
+			wantErr:     `msp/file.pem" is not a CA certificate`,
+		},
+		{
+			name:        "CA certificate as a known certificate",
+			field:       "known_certs",
+			fileContent: caCert,
+			wantErr:     `msp/file.pem" is a CA certificate, not the certificate of an identity`,
 		},
 		{
 			name:        "private key as an intermediate certificate",
@@ -534,7 +549,6 @@ func TestPartyAddRejectsInvalidOrgFiles(t *testing.T) {
 			blockPath := writeNodeTestBlock(t, baseBlock)
 
 			err := modify.New().PartyAdd(partyPath, blockPath)
-			require.ErrorContains(t, err, "the edited config is not a valid channel config")
 			require.ErrorContains(t, err, tc.wantErr)
 			requireArmaBlockUnchanged(t, blockPath, baseBlock)
 		})
@@ -661,6 +675,10 @@ func joiningNodeConfig(certs *ordererpb.NodeConfig, host string, port uint32) *o
 	return node
 }
 
+// partyTestPrivateKey is a PEM-encoded private key, to put in a certificate
+// file where a certificate or a CRL is expected.
+const partyTestPrivateKey = "-----BEGIN PRIVATE KEY-----\nU0VDUkVUS0VZ\n-----END PRIVATE KEY-----\n"
+
 // renderPartyDefinition renders a party definition as YAML in a fresh
 // directory, and returns the directory and the definition. The party and the
 // org group are in the protolator form `fxadmin decode` renders them, the org
@@ -693,8 +711,7 @@ func renderPartyDefinition(
 		files.replaceWithPaths(childMap(t, nodeMap, nodeConfigField), "client_tls_cert", tlsCertField, "sign_cert")
 	}
 	if mspConfig, ok := mspConfigMapOf(orgMap); ok {
-		files.replaceWithPaths(mspConfig, "root_certs", "intermediate_certs", "admins",
-			"tls_root_certs", "tls_intermediate_certs", "known_certs")
+		files.replaceMSPWithPaths(mspConfig)
 	}
 	if orgName != "" {
 		orgMap["Name"] = orgName
@@ -707,17 +724,27 @@ func renderPartyDefinition(
 	return dir, string(content)
 }
 
-// certificateFiles writes the certificates of a rendered party definition to
-// files in dir, one file per certificate.
+// certificateFiles writes the certificates of a rendered definition to files
+// in dir, one file per certificate. Each file is given by its path relative to
+// dir, or by its absolute path when absolute is set.
 type certificateFiles struct {
-	t     *testing.T
-	dir   string
-	count int
+	t        *testing.T
+	dir      string
+	absolute bool
+	count    int
+}
+
+// replaceMSPWithPaths replaces each certificate of a rendered Fabric MSP config
+// with the path of a file the certificate is written to.
+func (f *certificateFiles) replaceMSPWithPaths(mspConfig map[string]any) {
+	f.t.Helper()
+	f.replaceWithPaths(mspConfig, "root_certs", "intermediate_certs", "admins",
+		"tls_root_certs", "tls_intermediate_certs", "known_certs")
 }
 
 // replaceWithPaths replaces the base64 certificate, or each certificate of the
-// list, held by each of the given fields of holder with the path, relative to
-// dir, of a file the certificate is written to.
+// list, held by each of the given fields of holder with the path of a file the
+// certificate is written to.
 func (f *certificateFiles) replaceWithPaths(holder map[string]any, fields ...string) {
 	f.t.Helper()
 	for _, field := range fields {
@@ -737,7 +764,7 @@ func (f *certificateFiles) replaceWithPaths(holder map[string]any, fields ...str
 }
 
 // write writes a base64 certificate, as protolator renders it, to a new file in
-// a subdirectory of dir and returns the file's path relative to dir.
+// a subdirectory of dir and returns the file's path.
 func (f *certificateFiles) write(base64Cert string) string {
 	f.t.Helper()
 	cert, err := base64.StdEncoding.DecodeString(base64Cert)
@@ -746,6 +773,9 @@ func (f *certificateFiles) write(base64Cert string) string {
 	relPath := filepath.Join("certs", fmt.Sprintf("cert-%d.pem", f.count))
 	require.NoError(f.t, os.MkdirAll(filepath.Join(f.dir, "certs"), 0o750))
 	require.NoError(f.t, os.WriteFile(filepath.Join(f.dir, relPath), cert, 0o600))
+	if f.absolute {
+		return filepath.Join(f.dir, relPath)
+	}
 	return relPath
 }
 

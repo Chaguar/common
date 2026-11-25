@@ -21,6 +21,5 @@ func TestHandlerNotImplemented(t *testing.T) {
 
 	h := modify.New()
 
-	require.ErrorIs(t, h.AppAdd("org.yaml", "next.pb"), modify.ErrNotImplemented)
 	require.ErrorIs(t, h.AppRemove("peer2", "next.pb"), modify.ErrNotImplemented)
 }
