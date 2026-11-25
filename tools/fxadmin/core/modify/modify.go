@@ -10,15 +10,11 @@ SPDX-License-Identifier: Apache-2.0
 // change to the embedded common.Config, and writes the block back so further
 // modify commands can accumulate onto it; `compute-update --pb` then computes
 // the ConfigUpdate from the original and edited blocks.
-//
-// The command surface is wired and validated by the CLI. A handler whose change
-// logic is not implemented yet returns ErrNotImplemented.
 package modify
 
 import (
 	"fmt"
 
-	"github.com/cockroachdb/errors"
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
 
@@ -28,22 +24,12 @@ import (
 
 var logger = flogging.MustGetLogger("fxadmin.modify")
 
-// ErrNotImplemented is returned by every modify command whose change logic is
-// not implemented yet.
-var ErrNotImplemented = errors.New("not implemented")
-
 // Handler executes the modify commands.
 type Handler struct{}
 
 // New returns a modify command handler.
 func New() *Handler {
 	return &Handler{}
-}
-
-// AppRemove implements `fxadmin modify app remove`.
-func (*Handler) AppRemove(org, blockPath string) error {
-	logger.Debugf("modify app remove: org=%s block=%s (not implemented)", org, blockPath)
-	return ErrNotImplemented
 }
 
 // readAndDecodeConfigBlock reads the config block file at path and decodes it

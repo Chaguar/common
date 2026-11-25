@@ -67,6 +67,37 @@ func (*Handler) AppAdd(orgPath, blockPath string) error {
 	return nil
 }
 
+// AppRemove implements `fxadmin modify app remove`. It removes the whole config
+// group of an application org from the config block at blockPath, which is
+// rewritten in place: the org's MSP, its policies and every other value and
+// group it holds. The org is given by its key under the Application group,
+// which can differ from its MSP ID. Nothing else changes: the policies of the
+// Application group are implicit meta policies over its orgs, so they follow
+// the orgs that remain.
+func (*Handler) AppRemove(org, blockPath string) error {
+	logger.Debugf("modify app remove: org=%s block=%s", org, blockPath)
+
+	block, err := readAndDecodeConfigBlock(blockPath)
+	if err != nil {
+		return err
+	}
+	application := block.Config().GetChannelGroup().GetGroups()[channelconfig.ApplicationGroupKey]
+	if application == nil {
+		return errors.Newf("the config has no %s group", channelconfig.ApplicationGroupKey)
+	}
+	if _, exists := application.GetGroups()[org]; !exists {
+		return errors.Newf("the %s group has no org %q; give the org's name in the group, not its MSP ID",
+			channelconfig.ApplicationGroupKey, org)
+	}
+	delete(application.Groups, org)
+
+	if err := validateEncodeAndWriteConfigBlock(block, blockPath); err != nil {
+		return err
+	}
+	logger.Infof("removed application org %s from %s", org, blockPath)
+	return nil
+}
+
 // loadAppOrgDefinition reads the organization definition YAML at path and
 // returns the org's name and config group. The definition has exactly two
 // keys: the name, and the config group, which is decoded as is once its
