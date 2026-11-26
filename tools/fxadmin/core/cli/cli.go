@@ -319,7 +319,7 @@ func (c *CLI) addModifyAppCommands(modify *kingpin.CmdClause) {
 	})
 
 	remove := app.Command("remove", "Remove an application organization.")
-	removeOrg := remove.Arg("org", "Application organization name to remove.").Required().String()
+	removeOrg := remove.Arg("org", "The org's name under Application, not its MSP ID.").Required().String()
 	removeBlockFlag := blockFlag(remove)
 	c.register(remove, func() error {
 		return c.handlers.Modify.AppRemove(*removeOrg, *removeBlockFlag)

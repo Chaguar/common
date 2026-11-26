@@ -14,11 +14,18 @@ package modify
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
+	"github.com/cockroachdb/errors"
 	"github.com/hyperledger/fabric-lib-go/bccsp/factory"
 	"github.com/hyperledger/fabric-lib-go/common/flogging"
+	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
+	mspproto "github.com/hyperledger/fabric-protos-go-apiv2/msp"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/Chaguar/common/common/channelconfig"
+	"github.com/Chaguar/common/msp"
 	"github.com/Chaguar/common/tools/fxadmin/core/helpers"
 )
 
@@ -62,4 +69,54 @@ func validateEncodeAndWriteConfigBlock(block *helpers.ConfigBlock, path string) 
 		return err
 	}
 	return helpers.WriteBlock(block.Block, path)
+}
+
+// missingOrgError returns the error for an org that is not in the group named
+// groupKey. When org is the MSP ID of an org of the group, the error names that
+// org, as its MSP ID was likely given in place of its name; otherwise the error
+// lists the orgs of the group.
+func missingOrgError(groupKey string, group *cb.ConfigGroup, org string) error {
+	names := slices.Sorted(maps.Keys(group.GetGroups()))
+	for _, name := range names {
+		if mspID, err := mspIDOf(group.GetGroups()[name]); err == nil && mspID == org {
+			return errors.Newf("the %s group has no org %q; %q is the MSP ID of org %q: give the org's name",
+				groupKey, org, org, name)
+		}
+	}
+	if len(names) == 0 {
+		return errors.Newf("the %s group has no org %q; it has no orgs", groupKey, org)
+	}
+	return errors.Newf("the %s group has no org %q; its orgs are %q", groupKey, org, names)
+}
+
+// mspIDOf returns the MSP ID of the org: the name of its MSP, a Fabric or an
+// idemix one.
+func mspIDOf(org *cb.ConfigGroup) (string, error) {
+	value := org.GetValues()[channelconfig.MSPKey]
+	if value == nil {
+		return "", errors.Newf("no %s value", channelconfig.MSPKey)
+	}
+	mspConfig := &mspproto.MSPConfig{}
+	if err := proto.Unmarshal(value.GetValue(), mspConfig); err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal the MSP value")
+	}
+	var config interface {
+		proto.Message
+		GetName() string
+	}
+	switch mspConfig.GetType() {
+	case int32(msp.FABRIC):
+		config = &mspproto.FabricMSPConfig{}
+	case int32(msp.IDEMIX):
+		config = &mspproto.IdemixMSPConfig{}
+	default:
+		return "", errors.Newf("unsupported MSP type %d", mspConfig.GetType())
+	}
+	if err := proto.Unmarshal(mspConfig.GetConfig(), config); err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal the MSP config")
+	}
+	if config.GetName() == "" {
+		return "", errors.New("the MSP has no name")
+	}
+	return config.GetName(), nil
 }

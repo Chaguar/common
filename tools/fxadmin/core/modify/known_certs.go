@@ -47,8 +47,7 @@ func (*Handler) KnownCerts(ch change.KnownCerts) error {
 	}
 	org := group.GetGroups()[ch.Org]
 	if org == nil {
-		return errors.Newf("the %s group has no org %q; give the org's name in the group, not its MSP ID",
-			ch.Group, ch.Org)
+		return missingOrgError(ch.Group, group, ch.Org)
 	}
 	orgMSP, err := decodeOrgMSP(org)
 	if err != nil {

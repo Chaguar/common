@@ -188,10 +188,9 @@ func TestKnownCertsRejects(t *testing.T) {
 			// The orderer org is not in the Application group: the tool assumes
 			// that the application and the orderer orgs are different orgs.
 			name: "an org of the other group", block: baseBlock, op: knownTestAdd,
-			org:   knownTestOrg{group: channelconfig.ApplicationGroupKey, name: nodeTestOrg},
-			certs: []string{peerPaths[0]},
-			wantErr: `the Application group has no org "orderer-org-1"; ` +
-				"give the org's name in the group, not its MSP ID",
+			org:     knownTestOrg{group: channelconfig.ApplicationGroupKey, name: nodeTestOrg},
+			certs:   []string{peerPaths[0]},
+			wantErr: `the Application group has no org "orderer-org-1"; its orgs are ["peer-org-1"]`,
 		},
 		{
 			name: "removing a certificate the list does not hold", block: withoutFirstBlock, op: knownTestRemove,
