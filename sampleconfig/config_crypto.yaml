@@ -27,7 +27,7 @@ OrdererOrgs:
     #    OrganizationalUnit: Hyperledger Fabric
     #    StreetAddress: address for org # default nil
     #    PostalCode: postalCode for org # default nil
-    #    PublicKeyAlgorithm: ecdsa # CA's key algorithm ("ecdsa" or "ed25519")
+    #    PublicKeyAlgorithm: ecdsa # CA's key algorithm ("ecdsa", "ed25519", "mldsa44", "mldsa65", or "mldsa87")
     CA:
       Hostname: ca.sample-org.com
       CommonName: SampleOrgCA
@@ -41,7 +41,7 @@ OrdererOrgs:
     # You may override the number of nodes (Count), the starting index (Start)
     # or the template used to construct the name (Hostname).
     #
-    # PublicKeyAlgorithm: Hosts' key algorithm ("ecdsa" or "ed25519")
+    # PublicKeyAlgorithm: Hosts' key algorithm ("ecdsa", "ed25519", "mldsa44", "mldsa65", or "mldsa87")
     #
     # Note: Template and Specs are not mutually exclusive.  You may define both
     # sections and the aggregate nodes will be created for you.  Take care with
@@ -78,7 +78,7 @@ OrdererOrgs:
     #                 NOTE: Two implicit entries are created for you:
     #                     - {{ .CommonName }}
     #                     - {{ .Hostname }}
-    #   PublicKeyAlgorithm: Nodes' key algorithm ("ecdsa" or "ed25519")
+    #   PublicKeyAlgorithm: Nodes' key algorithm ("ecdsa", "ed25519", "mldsa44", "mldsa65", or "mldsa87")
     # ---------------------------------------------------------------------------
     # Specs:
     #   - Hostname: foo # implicitly "foo.org1.example.com"
@@ -129,7 +129,7 @@ PeerOrgs:
     # "Users"
     # ---------------------------------------------------------------------------
     # Count: The number of user accounts _in addition_ to Admin
-    # PublicKeyAlgorithm: Users' key algorithm ("ecdsa" or "ed25519")
+    # PublicKeyAlgorithm: Users' key algorithm ("ecdsa", "ed25519", "mldsa44", "mldsa65", or "mldsa87")
     # Specs: Explicit user definitions. Each Spec entry may set:
     #   - Name: (Required) the user's name; the credential is placed at
     #           users/<Name>@<Domain>, same as any other user.

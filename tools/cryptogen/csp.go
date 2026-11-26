@@ -11,6 +11,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/asn1"
@@ -29,6 +30,9 @@ import (
 const (
 	ECDSA   = "ecdsa"
 	ED25519 = "ed25519"
+	MLDSA44 = "mldsa44"
+	MLDSA65 = "mldsa65"
+	MLDSA87 = "mldsa87"
 
 	CertType       = "CERTIFICATE"
 	PrivateKeyType = "PRIVATE KEY"
@@ -39,14 +43,20 @@ const (
 	CertSuffix       = "-cert" + CertFileExt
 )
 
-// generatePrivateKey creates an ecdsa private key using a P-256 curve or an ed25519 key
-// and stores it in keystorePath.
+// generatePrivateKey creates an ecdsa private key using a P-256 curve, an ed25519 key,
+// or an ML-DSA key, and stores it in keystorePath.
 func generatePrivateKey(keystorePath, keyAlg string) (priv crypto.PrivateKey, err error) {
 	switch keyAlg {
 	case ECDSA:
 		priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	case ED25519:
 		_, priv, err = ed25519.GenerateKey(rand.Reader)
+	case MLDSA44:
+		priv, err = mldsa.GenerateKey(mldsa.MLDSA44())
+	case MLDSA65:
+		priv, err = mldsa.GenerateKey(mldsa.MLDSA65())
+	case MLDSA87:
+		priv, err = mldsa.GenerateKey(mldsa.MLDSA87())
 	default:
 		err = errors.Newf("unsupported key algorithm: %s", keyAlg)
 	}
@@ -76,12 +86,12 @@ func loadPrivateKey(keystorePath string) (crypto.PrivateKey, error) {
 		return nil, errors.Wrapf(err, "PEM bytes are not PKCS8 encoded [%s]", keyPath)
 	}
 
-	_, isEcdsa := key.(*ecdsa.PrivateKey)
-	_, isEd25519 := key.(ed25519.PrivateKey)
-	if !isEcdsa && !isEd25519 {
-		return nil, errors.Errorf("PEM bytes do not contain an ECDSA nor ed25519 private key [%s]", keyPath)
+	switch key.(type) {
+	case *ecdsa.PrivateKey, ed25519.PrivateKey, *mldsa.PrivateKey:
+		return key, nil
+	default:
+		return nil, errors.Errorf("PEM bytes do not contain an ECDSA, ed25519, or ML-DSA private key [%s]", keyPath)
 	}
-	return key, nil
 }
 
 // loadCertificate load an ECDSA cert from a file in cert path.

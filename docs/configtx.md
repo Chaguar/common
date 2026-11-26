@@ -316,9 +316,9 @@ MSPDir/
 
 ### 5.2 Capabilities
 
-Capabilities will be used in a future version to support rolling upgrades of
-committer and orderer nodes. The current sampleconfig keeps the capability maps
-empty:
+Capabilities gate features that all nodes must support. Rolling upgrades of
+committer and orderer nodes will use them in a future version. The current
+sampleconfig keeps the capability maps empty:
 
 ```yaml
 Capabilities:
@@ -326,6 +326,19 @@ Capabilities:
   Orderer: &OrdererCapabilities {}
   Application: &ApplicationCapabilities {}
 ```
+
+The channel capability `V3_1` enables ML-DSA (FIPS 204) identities. It selects MSP version 3.1. Below 3.1, the
+MSP rejects every certificate with an ML-DSA public key: CAs, admins, and identities. All nodes must run a
+binary that supports `V3_1` before a channel enables it:
+
+```yaml
+Capabilities:
+  Channel: &ChannelCapabilities
+    V3_1: true
+```
+
+A local MSP always uses version 3.1. To generate ML-DSA material, set `PublicKeyAlgorithm` in the cryptogen
+config (see `sampleconfig/config_crypto.yaml`) to `mldsa44`, `mldsa65`, or `mldsa87`. ML-DSA needs Go 1.27 or later.
 
 ---
 

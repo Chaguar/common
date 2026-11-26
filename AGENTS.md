@@ -7,7 +7,7 @@ it originates from [Hyperledger Fabric](https://github.com/hyperledger/fabric) v
 [fabric-config](https://github.com/hyperledger/fabric-config) v0.3.0, then modified for
 Chaguar. When editing ported code, preserve upstream structure and idioms — divergence from
 Fabric should be intentional, not incidental. Known Chaguar divergence from upstream config:
-the `ARMA` orderer type.
+the `ARMA` orderer type, and the `V3_1` channel capability (MSPv3_1, ML-DSA identities).
 
 There are no long-running services here: the artifacts are reusable packages plus three CLI
 tools (`configtxgen`, `configtxlator`, `cryptogen`).

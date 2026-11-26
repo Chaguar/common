@@ -81,7 +81,12 @@ func sanitizeECDSASignedCert(cert *x509.Certificate, parentCert *x509.Certificat
 		return nil, errors.New("parent certificate must be different from nil")
 	}
 
-	expectedSig, err := utils.SignatureToLowS(parentCert.PublicKey.(*ecdsa.PublicKey), cert.Signature)
+	parentKey, ok := parentCert.PublicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, errors.Errorf("ECDSA-signed certificate has a %T parent public key", parentCert.PublicKey)
+	}
+
+	expectedSig, err := utils.SignatureToLowS(parentKey, cert.Signature)
 	if err != nil {
 		return nil, err
 	}

@@ -232,7 +232,7 @@ var mspTypeStrings = map[ProviderType]string{
 }
 
 var Options = map[string]NewOpts{
-	ProviderTypeToString(FABRIC): &BCCSPNewOpts{Version: MSPv3_0},
+	ProviderTypeToString(FABRIC): &BCCSPNewOpts{Version: MSPv3_1},
 	ProviderTypeToString(IDEMIX): &IdemixNewOpts{Version: MSPv1_1},
 }
 

@@ -63,7 +63,7 @@ func TestLoadPrivateKey_BadPEM(t *testing.T) {
 		{
 			name:   "not EC key",
 			data:   pkcs8RSAPem,
-			errMsg: "PEM bytes do not contain an ECDSA nor ed25519 private key",
+			errMsg: "PEM bytes do not contain an ECDSA, ed25519, or ML-DSA private key",
 		},
 		{
 			name:   "not PKCS8 encoded",

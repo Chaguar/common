@@ -22,6 +22,7 @@ const (
 	MSPv1_3
 	MSPv1_4_3
 	MSPv3_0
+	MSPv3_1
 )
 
 // NewOpts represent
@@ -54,14 +55,14 @@ func New(opts NewOpts, cryptoProvider bccsp.BCCSP) (MSP, error) {
 	switch opts.(type) {
 	case *BCCSPNewOpts:
 		switch opts.GetVersion() {
-		case MSPv1_0, MSPv1_1, MSPv1_3, MSPv1_4_3, MSPv3_0:
+		case MSPv1_0, MSPv1_1, MSPv1_3, MSPv1_4_3, MSPv3_0, MSPv3_1:
 			return newBccspMsp(opts.GetVersion(), cryptoProvider)
 		default:
 			return nil, errors.Errorf("Invalid *BCCSPNewOpts. Version not recognized [%v]", opts.GetVersion())
 		}
 	case *IdemixNewOpts:
 		switch opts.GetVersion() {
-		case MSPv1_0, MSPv1_1, MSPv1_3, MSPv1_4_3, MSPv3_0:
+		case MSPv1_0, MSPv1_1, MSPv1_3, MSPv1_4_3, MSPv3_0, MSPv3_1:
 			msp, err := idemixmsp.NewIdemixMsp(idemixmsp.MSPVersion(opts.GetVersion()))
 			if err != nil {
 				return nil, err

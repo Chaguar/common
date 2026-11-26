@@ -32,6 +32,10 @@ const (
 
 	// ChannelV3_0 is the capabilities string for standard new non-backwards compatible fabric v3.0 channel capabilities.
 	ChannelV3_0 = "V3_0"
+
+	// ChannelV3_1 is the capabilities string for Chaguar v3.1 channel capabilities.
+	// It enables ML-DSA (FIPS 204) identities through MSPv3_1.
+	ChannelV3_1 = "V3_1"
 )
 
 // ChannelProvider provides capabilities information for channel level config.
@@ -43,6 +47,7 @@ type ChannelProvider struct {
 	v143 bool
 	v20  bool
 	v30  bool
+	v31  bool
 }
 
 // NewChannelProvider creates a channel capabilities provider.
@@ -55,6 +60,7 @@ func NewChannelProvider(capabilities map[string]*cb.Capability) *ChannelProvider
 	_, cp.v143 = capabilities[ChannelV1_4_3]
 	_, cp.v20 = capabilities[ChannelV2_0]
 	_, cp.v30 = capabilities[ChannelV3_0]
+	_, cp.v31 = capabilities[ChannelV3_1]
 	return cp
 }
 
@@ -67,6 +73,8 @@ func (cp *ChannelProvider) Type() string {
 func (cp *ChannelProvider) HasCapability(capability string) bool {
 	switch capability {
 	// Add new capability names here
+	case ChannelV3_1:
+		return true
 	case ChannelV3_0:
 		return true
 	case ChannelV2_0:
@@ -87,6 +95,8 @@ func (cp *ChannelProvider) HasCapability(capability string) bool {
 // MSPVersion returns the level of MSP support required by this channel.
 func (cp *ChannelProvider) MSPVersion() msp.MSPVersion {
 	switch {
+	case cp.v31:
+		return msp.MSPv3_1
 	case cp.v30:
 		return msp.MSPv3_0
 	case cp.v143 || cp.v20:
@@ -102,10 +112,10 @@ func (cp *ChannelProvider) MSPVersion() msp.MSPVersion {
 
 // ConsensusTypeMigration return true if consensus-type migration is supported and permitted in both orderer and peer.
 func (cp *ChannelProvider) ConsensusTypeMigration() bool {
-	return cp.v142 || cp.v143 || cp.v20 || cp.v30
+	return cp.v142 || cp.v143 || cp.v20 || cp.v30 || cp.v31
 }
 
 // OrgSpecificOrdererEndpoints allows for individual orderer orgs to specify their external addresses for their OSNs.
 func (cp *ChannelProvider) OrgSpecificOrdererEndpoints() bool {
-	return cp.v142 || cp.v143 || cp.v20 || cp.v30
+	return cp.v142 || cp.v143 || cp.v20 || cp.v30 || cp.v31
 }

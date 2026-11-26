@@ -10,6 +10,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/x509"
 	"os"
 	"path"
@@ -227,6 +228,8 @@ func getPublicKey(priv crypto.PrivateKey) crypto.PublicKey {
 		return &(kk.PublicKey)
 	case ed25519.PrivateKey:
 		return kk.Public()
+	case *mldsa.PrivateKey:
+		return kk.PublicKey()
 	default:
 		panic("unsupported key algorithm")
 	}

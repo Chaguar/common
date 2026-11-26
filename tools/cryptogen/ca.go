@@ -10,6 +10,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/x509"
@@ -185,6 +186,8 @@ func computeSKI(privKey crypto.PrivateKey) ([]byte, error) {
 	case ed25519.PrivateKey:
 		//nolint:errcheck,revive,forcetypeassert // implementation always returns this type.
 		raw = kk.Public().(ed25519.PublicKey)
+	case *mldsa.PrivateKey:
+		raw = kk.PublicKey().Bytes()
 	}
 
 	// Hash it
@@ -272,6 +275,8 @@ func newSignerFromPrivateKey(priv crypto.PrivateKey) crypto.Signer {
 		return &ED25519Signer{
 			PrivateKey: kk,
 		}
+	case *mldsa.PrivateKey:
+		return kk
 	default:
 		panic("unsupported key algorithm")
 	}

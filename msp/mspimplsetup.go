@@ -102,6 +102,10 @@ func (msp *bccspmsp) setupCrypto(conf *msppb.FabricMSPConfig) error {
 
 	msp.supportedPublicKeyAlgorithms = make(map[x509.PublicKeyAlgorithm]bool)
 	msp.supportedPublicKeyAlgorithms[x509.ECDSA] = true
+	// Set before the CAs are loaded, so that the ML-DSA check applies to them.
+	if msp.version >= MSPv3_1 {
+		msp.supportedPublicKeyAlgorithms[x509.MLDSA] = true
+	}
 
 	return nil
 }
