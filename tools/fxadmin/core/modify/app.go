@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	cb "github.com/hyperledger/fabric-protos-go-apiv2/common"
@@ -64,6 +65,59 @@ func (*Handler) AppAdd(orgPath, blockPath string) error {
 		return err
 	}
 	logger.Infof("added application org %s to %s", name, blockPath)
+	return nil
+}
+
+// AppRemove implements `fxadmin modify app remove`. It removes the whole config
+// group of an application org from the config block at blockPath, which is
+// rewritten in place: the org's MSP, its policies and every other value and
+// group it holds. The org is given by its key under the Application group,
+// which can differ from its MSP ID. Nothing else changes:
+//   - the only application org is not removed. With no org, the implicit meta
+//     policies of the Application group would be satisfied by anyone;
+//   - what the rest of the config still refers to the org by, an ACL or a
+//     signature policy (see appOrgReferences), is kept,
+//     and a warning lists it, for the admins to update it.
+func (*Handler) AppRemove(org, blockPath string) error {
+	logger.Debugf("modify app remove: org=%s block=%s", org, blockPath)
+
+	block, err := readAndDecodeConfigBlock(blockPath)
+	if err != nil {
+		return err
+	}
+	channel := block.Config().GetChannelGroup()
+	application := channel.GetGroups()[channelconfig.ApplicationGroupKey]
+	if application == nil {
+		return errors.Newf("the config has no %s group", channelconfig.ApplicationGroupKey)
+	}
+	removed, exists := application.GetGroups()[org]
+	if !exists {
+		return missingOrgError(channelconfig.ApplicationGroupKey, application, org)
+	}
+	if len(application.GetGroups()) == 1 {
+		return errors.Newf("application org %q is the only org of the %s group, and cannot be removed: "+
+			"with no org, the group's policies would be satisfied by anyone", org, channelconfig.ApplicationGroupKey)
+	}
+	mspID, err := mspIDOf(removed)
+	if err != nil {
+		return fmt.Errorf("failed to read the MSP ID of application org %q: %w", org, err)
+	}
+	delete(application.Groups, org)
+	refs, err := appOrgReferences(channel, org, mspID)
+	if err != nil {
+		return err
+	}
+
+	if err := validateEncodeAndWriteConfigBlock(block, blockPath); err != nil {
+		return err
+	}
+	logger.Infof("removed application org %s from %s", org, blockPath)
+	if len(refs) > 0 {
+		logger.Warnf("the config still refers to the removed application org %s: %s. The org can no "+
+			"longer satisfy these policies, and these ACLs deny every request: update them in a config update. "+
+			"A policy that guards changes, such as Admins, and needs the org locks what it guards",
+			org, strings.Join(refs, ", "))
+	}
 	return nil
 }
 
