@@ -91,7 +91,8 @@ example, is added to the encoder, the sample profile, and the policy-path tables
 `docs/configtx.md` (see how `SnapshotEndorsement` / `CheckpointEndorsement` were added). Add a test
 that the policy resolves via `bundle.PolicyManager().GetPolicy(...)`.
 
-Chaguar divergence from upstream config to preserve: the `ARMA` orderer type.
+Chaguar divergence from upstream config to preserve: the `ARMA` orderer type, and the `V3_1` channel
+capability (MSPv3_1, ML-DSA identities).
 
 ## 4. JSON ⇄ protobuf
 

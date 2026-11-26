@@ -21,6 +21,7 @@ Uses [Hyperledger Fabric Config](https://github.com/hyperledger/fabric-config) v
 
 This modifies Fabric's config block:
 * Added ARMA field for orderer type
+* Added the `V3_1` channel capability. It selects MSPv3_1, which accepts ML-DSA (FIPS 204) identities.
 
 ### MSP
 - hyperledger/fabric/msp

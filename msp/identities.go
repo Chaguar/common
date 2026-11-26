@@ -183,11 +183,11 @@ func (id *identity) Verify(msg []byte, sig []byte) error {
 
 	digestOrMsg := msg
 
-	// Compute Hash if not Ed25519
+	// Compute Hash if not Ed25519 or ML-DSA
 	// Ideally this method should be algorithm agnostic
 	// but golang requires the hash for ecdsa and requires
-	// the full message for ed25519
-	if id.cert.PublicKeyAlgorithm != x509.Ed25519 {
+	// the full message for ed25519 and ML-DSA
+	if !signsFullMessage(id.cert.PublicKeyAlgorithm) {
 		hashOpt, err := id.getHashOpt(id.msp.cryptoConfig.SignatureHashFamily)
 		if err != nil {
 			return errors.WithMessage(err, "failed getting hash function options")
@@ -247,6 +247,11 @@ func marshalMessage(msg proto.Message, errWrap string) ([]byte, error) {
 	return bytes, nil
 }
 
+// signsFullMessage reports whether alg signs the full message instead of its digest.
+func signsFullMessage(alg x509.PublicKeyAlgorithm) bool {
+	return alg == x509.Ed25519 || alg == x509.MLDSA
+}
+
 func (id *identity) getHashOpt(hashFamily string) (bccsp.HashOpts, error) {
 	switch hashFamily {
 	case bccsp.SHA2:
@@ -290,11 +295,11 @@ func (id *signingidentity) Sign(msg []byte) ([]byte, error) {
 
 	digestOrMsg := msg
 
-	// Compute Hash if not Ed25519
+	// Compute Hash if not Ed25519 or ML-DSA
 	// Ideally this method should be algorithm agnostic
 	// but golang requires the hash for ecdsa and requires
-	// the full message for ed25519
-	if id.identity.cert.PublicKeyAlgorithm != x509.Ed25519 {
+	// the full message for ed25519 and ML-DSA
+	if !signsFullMessage(id.cert.PublicKeyAlgorithm) {
 		hashOpt, err := id.getHashOpt(id.msp.cryptoConfig.SignatureHashFamily)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed getting hash function options")
@@ -311,10 +316,10 @@ func (id *signingidentity) Sign(msg []byte) ([]byte, error) {
 	} else {
 		mspIdentityLogger.Debugf("Sign: plaintext: %X...%X \n", msg[0:16], msg[len(msg)-16:])
 	}
-	if id.identity.cert.PublicKeyAlgorithm != x509.Ed25519 {
+	if !signsFullMessage(id.cert.PublicKeyAlgorithm) {
 		mspIdentityLogger.Debugf("Sign: digest: %X \n", digestOrMsg)
 	}
-	// Sign digest for ECDSA or msg for ED25519
+	// Sign digest for ECDSA or msg for ED25519 and ML-DSA
 	return id.signer.Sign(rand.Reader, digestOrMsg, nil)
 }
 

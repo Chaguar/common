@@ -111,6 +111,17 @@ func TestChannelV30(t *testing.T) {
 	require.True(t, cp.OrgSpecificOrdererEndpoints())
 }
 
+func TestChannelV31(t *testing.T) {
+	t.Parallel()
+	cp := NewChannelProvider(map[string]*cb.Capability{
+		ChannelV3_1: {},
+	})
+	require.NoError(t, cp.Supported())
+	require.Equal(t, msp.MSPv3_1, int(cp.MSPVersion()))
+	require.True(t, cp.ConsensusTypeMigration())
+	require.True(t, cp.OrgSpecificOrdererEndpoints())
+}
+
 func TestChannelNotSupported(t *testing.T) {
 	cp := NewChannelProvider(map[string]*cb.Capability{
 		ChannelV1_1:           {},

@@ -122,3 +122,5 @@ require (
 	gotest.tools/gotestsum v1.13.0 // indirect
 	mvdan.cc/gofumpt v0.9.2 // indirect
 )
+
+replace github.com/hyperledger/fabric-lib-go => github.com/adecaro/fabric-lib-go v1.1.6-0.20261126162234-dd17b7384a7e

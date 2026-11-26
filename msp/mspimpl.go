@@ -8,6 +8,7 @@ package msp
 
 import (
 	"bytes"
+	"crypto/mldsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -146,7 +147,7 @@ func newBccspMsp(version MSPVersion, defaultBCCSP bccsp.BCCSP) (MSP, error) {
 		theMsp.internalValidateIdentityOusFunc = theMsp.validateIdentityOUsV142
 		theMsp.internalSatisfiesPrincipalInternalFunc = theMsp.satisfiesPrincipalInternalV142
 		theMsp.internalSetupAdmin = theMsp.setupAdminsV142
-	case MSPv3_0:
+	case MSPv3_0, MSPv3_1:
 		theMsp.internalSetupFunc = theMsp.setupV3
 		theMsp.internalValidateIdentityOusFunc = theMsp.validateIdentityOUsV142
 		theMsp.internalSatisfiesPrincipalInternalFunc = theMsp.satisfiesPrincipalInternalV142
@@ -206,6 +207,10 @@ func (msp *bccspmsp) getIdentityFromConf(idBytes []byte) (Identity, bccsp.Key, e
 		return nil, nil, err
 	}
 
+	if err = msp.checkPublicKeyAlgorithm(cert); err != nil {
+		return nil, nil, err
+	}
+
 	// get the public key in the right format
 	certPubK, err := msp.bccsp.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
 	if err != nil {
@@ -244,7 +249,11 @@ func (msp *bccspmsp) getSigningIdentityFromConf(sidInfo *m.SigningIdentityInfo) 
 		if pemKey == nil {
 			return nil, errors.Errorf("%s: wrong PEM encoding", sidInfo.PrivateSigner.KeyIdentifier)
 		}
-		privKey, err = msp.bccsp.KeyImport(pemKey.Bytes, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: true})
+		var importOpts bccsp.KeyImportOpts = &bccsp.ECDSAPrivateKeyImportOpts{Temporary: true}
+		if isMLDSAPrivateKey(pemKey.Bytes) {
+			importOpts = &bccsp.MLDSAPrivateKeyImportOpts{Temporary: true}
+		}
+		privKey, err = msp.bccsp.KeyImport(pemKey.Bytes, importOpts)
 		if err != nil {
 			return nil, errors.WithMessage(err, "getIdentityFromBytes error: Failed to import EC private key")
 		}
@@ -436,12 +445,35 @@ func (msp *bccspmsp) deserializeIdentityInternal(serializedIdentity []byte) (Ide
 	// We can't do it yet because there is no standardized way
 	// (yet) to encode the MSP ID into the x.509 body of a cert
 
+	if err = msp.checkPublicKeyAlgorithm(cert); err != nil {
+		return nil, err
+	}
+
 	pub, err := msp.bccsp.KeyImport(cert, &bccsp.X509PublicKeyImportOpts{Temporary: true})
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to import certificate's public key")
 	}
 
 	return newIdentity(cert, pub, msp)
+}
+
+// checkPublicKeyAlgorithm rejects ML-DSA public keys when this MSP version does not support them.
+// It applies to every certificate: CAs, admins, known certs, and identities.
+func (msp *bccspmsp) checkPublicKeyAlgorithm(cert *x509.Certificate) error {
+	if cert.PublicKeyAlgorithm == x509.MLDSA && !msp.supportedPublicKeyAlgorithms[x509.MLDSA] {
+		return errors.Newf("%s public keys require MSP version 3.1 or later", cert.PublicKeyAlgorithm)
+	}
+	return nil
+}
+
+// isMLDSAPrivateKey reports whether der is a PKCS#8 ML-DSA private key.
+func isMLDSAPrivateKey(der []byte) bool {
+	key, err := x509.ParsePKCS8PrivateKey(der)
+	if err != nil {
+		return false
+	}
+	_, ok := key.(*mldsa.PrivateKey)
+	return ok
 }
 
 // SatisfiesPrincipal returns nil if the identity matches the principal or an error otherwise

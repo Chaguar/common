@@ -10,6 +10,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/asn1"
@@ -111,12 +112,14 @@ func validateEnrollmentCertificate(b []byte) error {
 
 func (si *Signer) Sign(msg []byte) ([]byte, error) {
 	switch key := si.key.(type) {
-	// Fabric only supports ECDSA and ed25519 at the moment.
+	// Fabric supports ECDSA, ed25519, and ML-DSA.
 	case *ecdsa.PrivateKey:
 		digest := util.ComputeSHA256(msg)
 		return signECDSA(si.key.(*ecdsa.PrivateKey), digest)
 	case ed25519.PrivateKey:
 		return ed25519.Sign(si.key.(ed25519.PrivateKey), msg), nil
+	case *mldsa.PrivateKey:
+		return key.Sign(rand.Reader, msg, nil)
 	default:
 		return nil, errors.Errorf("found unknown private key type (%T) in msg signing", key)
 	}
@@ -147,6 +150,8 @@ func parsePrivateKey(der []byte) (crypto.PrivateKey, error) {
 		case *ecdsa.PrivateKey:
 			return key, nil
 		case ed25519.PrivateKey:
+			return key, nil
+		case *mldsa.PrivateKey:
 			return key, nil
 		default:
 			return nil, errors.Errorf("found unknown private key type (%T) in PKCS#8 wrapping", key)

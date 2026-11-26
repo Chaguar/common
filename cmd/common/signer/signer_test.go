@@ -9,11 +9,16 @@ package signer
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/mldsa"
+	"crypto/rand"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/pem"
+	"math/big"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/hyperledger/fabric-lib-go/bccsp/utils"
 	"github.com/stretchr/testify/require"
@@ -182,4 +187,35 @@ func TestSignerBadConfig(t *testing.T) {
 	signer, err = NewSigner(conf)
 	require.EqualError(t, err, "enrollment certificate is not a valid x509 certificate: x509: malformed certificate")
 	require.Nil(t, signer)
+}
+
+func TestMLDSASigner(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	sk, err := mldsa.GenerateKey(mldsa.MLDSA65())
+	require.NoError(t, err)
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "mldsa"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, template, template, sk.PublicKey(), sk)
+	require.NoError(t, err)
+	keyDER, err := x509.MarshalPKCS8PrivateKey(sk)
+	require.NoError(t, err)
+	certPath := filepath.Join(dir, "cert.pem")
+	keyPath := filepath.Join(dir, "key_sk")
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER})
+	require.NoError(t, os.WriteFile(certPath, certPEM, 0o600))
+	require.NoError(t, os.WriteFile(keyPath, keyPEM, 0o600))
+
+	signer, err := NewSigner(Config{MSPID: "SampleOrg", IdentityPath: certPath, KeyPath: keyPath})
+	require.NoError(t, err)
+
+	msg := []byte("foo")
+	sig, err := signer.Sign(msg)
+	require.NoError(t, err)
+	require.NoError(t, mldsa.Verify(sk.PublicKey(), msg, sig, nil))
 }
