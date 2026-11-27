@@ -7,10 +7,10 @@ cloud.google.com/go/longrunning v0.8.0 h1:LiKK77J3bx5gDLi4SMViHixjD2ohlkwBi+mKA7
 cloud.google.com/go/longrunning v0.8.0/go.mod h1:UmErU2Onzi+fKDg2gR7dusz11Pe26aknR4kHmJJqIfk=
 github.com/DataDog/zstd v1.5.7 h1:ybO8RBeh29qrxIhCA9E8gKY6xfONU9T6G6aP9DTKfLE=
 github.com/DataDog/zstd v1.5.7/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
-github.com/IBM/idemix v0.3.1 h1:Hzlad1hsij+Nk8PoGB4E2MmexHUyE9KLyZTJVkK/I5A=
-github.com/IBM/idemix v0.3.1/go.mod h1:S5SXwuwJQXFrY1LwCdvqwfQWOKCb8hVoY18ZcAFc8rQ=
-github.com/IBM/mathlib v0.3.2 h1:4XWONT9OBwzsgVPdqWOZhB/bxETPSdi7t+1u36X9oNo=
-github.com/IBM/mathlib v0.3.2/go.mod h1:SoGBO5m5bHQ4hph+nhf3o5gmBgRLXXZ77/YVa1X7xbc=
+github.com/IBM/idemix v0.4.0 h1:jbj5uknFzowpdgHaPKNpCYAAu1vJq3RV1bYwNEZPi+Q=
+github.com/IBM/idemix v0.4.0/go.mod h1:4IB+sb7bkmJ3VF5IoOAnzB6AyVwsFT/Ye5aP7sFAQbc=
+github.com/IBM/mathlib v0.4.0 h1:ph5jt34hPVnse6N55VPgqQJX0qj8QfRzYI+8d8eLIRk=
+github.com/IBM/mathlib v0.4.0/go.mod h1:SoGBO5m5bHQ4hph+nhf3o5gmBgRLXXZ77/YVa1X7xbc=
 github.com/Masterminds/semver/v3 v3.5.0 h1:kQceYJfbupGfZOKZQg0kou0DgAKhzDg2NZPAwZ/2OOE=
 github.com/Masterminds/semver/v3 v3.5.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/RaduBerinde/axisds v0.1.0 h1:YItk/RmU5nvlsv/awo2Fjx97Mfpt4JfgtEVAGPrLdz8=

@@ -7,7 +7,7 @@ module github.com/Chaguar/common
 go 1.27.3
 
 require (
-	github.com/IBM/idemix v0.3.1
+	github.com/IBM/idemix v0.4.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/cockroachdb/errors v1.14.0
@@ -44,7 +44,7 @@ require (
 	bitbucket.org/creachadair/stringset v0.0.12 // indirect
 	cloud.google.com/go/longrunning v0.8.0 // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
-	github.com/IBM/mathlib v0.3.2 // indirect
+	github.com/IBM/mathlib v0.4.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/RaduBerinde/axisds v0.1.0 // indirect
 	github.com/RaduBerinde/btreemap v0.0.0-20250419174037-3d62b7205d54 // indirect
